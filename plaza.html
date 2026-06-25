@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>동산지기 광장</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; height: 100%; background: #4a8a5a; touch-action: none; }
+
+.bg { position: fixed; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
+
+/* 플레이어 */
+.player { position: fixed; z-index: 20; display: flex; flex-direction: column; align-items: center; pointer-events: none; transform: translate(-50%, -100%); }
+.player-sprite { width: clamp(45px, 6vw, 80px); height: clamp(60px, 8vw, 105px); object-fit: contain; }
+.player-shadow { width: clamp(28px, 4vw, 52px); height: clamp(5px, 0.7vw, 9px); background: rgba(0,0,0,0.22); border-radius: 50%; margin-top: -4px; }
+.player-name { background: rgba(0,0,0,0.75); color: white; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; margin-top: 3px; }
+.player-bubble { background: white; border: 2px solid #58c858; border-radius: 10px; padding: 5px 10px; font-size: 11px; color: #333; position: absolute; bottom: 110%; white-space: normal; word-break: keep-all; max-width: 150px; text-align: center; line-height: 1.4; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+.player-bubble::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#58c858; }
+.my-player .player-sprite { filter: drop-shadow(0 0 7px #FFD700); }
+
+/* 상단 바 */
+.top-bar { position: fixed; top:0; left:0; right:0; z-index:50; background: rgba(0,20,60,0.82); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #58c858; }
+.back-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.top-title { color: #FFD700; font-size: 14px; font-weight: 900; }
+.top-right { display:flex; align-items:center; gap:8px; }
+.online-badge { background: #58c858; color: white; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px; }
+.exit-btn { background: rgba(220,50,50,0.85); border: 1px solid rgba(255,100,100,0.5); color: white; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
+
+/* 접속자 */
+.users-panel { position: fixed; top:48px; left:8px; z-index:40; background: rgba(0,20,60,0.78); border: 1px solid #58c858; border-radius: 10px; padding: 7px 9px; min-width: 80px; max-width: 110px; }
+.users-title { font-size: 9px; color: #58c858; font-weight: 700; margin-bottom: 5px; }
+.user-item { font-size: 10px; color: #eee; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+.user-dot { width: 6px; height: 6px; background: #58c858; border-radius: 50%; flex-shrink: 0; }
+
+/* 조이스틱 */
+.joystick { position: fixed; left:10px; bottom:14px; z-index:50; width: 96px; height: 96px; display: grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr 1fr; gap:3px; }
+.jbtn { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.25); border-radius: 7px; color: white; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.jbtn.pressed { background: rgba(88,200,88,0.6); }
+.jcenter { background: rgba(255,255,255,0.08); border-radius: 50%; }
+
+/* 채팅 */
+.chat-panel { position: fixed; top:50px; right:8px; z-index:50; width: min(360px, 32vw, calc(100vw - 110px)); }
+.chat-box { background: rgba(0,20,60,0.82); border: 2px solid #58c858; border-radius: 10px 10px 0 0; padding: 8px; height: clamp(100px, 18vh, 160px); overflow-y: scroll; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; }
+.chat-box::-webkit-scrollbar { width: 4px; }
+.chat-box::-webkit-scrollbar-thumb { background: #58c858; border-radius: 2px; }
+.chat-msg { font-size: 11px; line-height: 1.4; word-break: break-all; }
+.chat-msg .cn { color: #58c858; font-weight: 700; }
+.chat-msg .ct { color: #ddd; }
+.chat-msg.sys .ct { color: #FFD700; font-style: italic; }
+.chat-row { display: flex; border: 2px solid #58c858; border-top: none; border-radius: 0 0 10px 10px; overflow: hidden; background: rgba(0,20,60,0.9); }
+.chat-input { flex:1; min-width:0; background:none; border:none; color:white; font-size:12px; padding:7px 6px; font-family:inherit; outline:none; }
+.chat-input::placeholder { color:#445; }
+.chat-send { background:#58c858; border:none; color:white; font-size:12px; font-weight:700; padding:0 12px; cursor:pointer; flex-shrink:0; }
+
+/* 모달 공통 */
+.modal-bg { position: fixed; inset:0; background: rgba(0,0,0,0.78); z-index:200; display:flex; align-items:center; justify-content:center; }
+.modal { background: #fff; border: 3px solid #58c858; border-radius: 20px; padding: 22px; width: min(380px, 95vw); box-shadow: 0 8px 30px rgba(0,0,0,0.35); max-height: 92vh; overflow-y: auto; }
+.modal-title { font-size:17px; font-weight:900; color:#206820; text-align:center; margin-bottom:4px; }
+.modal-sub { font-size:11px; color:#888; text-align:center; margin-bottom:14px; }
+.name-input { width:100%; padding:11px; border:2px solid #c8e6c9; border-radius:10px; font-size:14px; font-family:inherit; background:#f9fff9; outline:none; margin-bottom:12px; text-align:center; }
+.name-input:focus { border-color:#58c858; }
+.char-section-title { font-size:11px; font-weight:700; color:#388e3c; margin-bottom:8px; }
+.char-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+.char-grid .char-opt:nth-child(4),
+.char-grid .char-opt:nth-child(5),
+.char-grid .char-opt:nth-child(6),
+.char-grid .char-opt:nth-child(7) { grid-column: auto; }
+/* 4번째부터 4열로 */
+.char-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; justify-content:center; }
+.char-opt { width: calc(33% - 6px); border:2px solid #e0e0e0; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafff9; transition:all 0.15s; padding:6px 4px; }
+.char-opt.wide { width: calc(25% - 6px); }
+
+.char-opt { border:2px solid #e0e0e0; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafff9; transition:all 0.15s; padding:6px 4px; }
+.char-opt.pastor-only { border-color:#FFD700; background:#fffbf0; }
+.char-opt.pastor-only.locked { opacity:0.4; cursor:not-allowed; }
+.char-opt span { font-size:9px; color:#555; margin-top:4px; font-weight:600; text-align:center; }
+.char-opt:hover:not(.locked) { border-color:#58c858; background:#f1faf1; }
+.char-opt.sel { border-color:#58c858; background:#e8f5e9; box-shadow:0 0 0 2px #58c858; }
+.enter-btn { width:100%; padding:13px; background:linear-gradient(180deg,#66bb6a,#43a047); border:none; border-radius:12px; color:white; font-size:15px; font-weight:900; font-family:inherit; cursor:pointer; box-shadow:0 4px 0 #2e7d32; }
+.enter-btn:disabled { opacity:0.4; cursor:not-allowed; }
+
+/* 미니게임 모달 */
+.game-modal { background: #1a1a2e; border: 3px solid #FFD700; border-radius: 20px; padding: 24px; width: min(420px, 95vw); box-shadow: 0 8px 30px rgba(0,0,0,0.5); max-height: 92vh; overflow-y: auto; }
+.game-title { font-size:18px; font-weight:900; color:#FFD700; text-align:center; margin-bottom:6px; }
+.game-sub { font-size:11px; color:#aaa; text-align:center; margin-bottom:16px; }
+.verse-box { background: #0d0d1a; border: 2px solid #FFD700; border-radius: 12px; padding: 16px; margin-bottom:14px; }
+.verse-ref { font-size:12px; color:#FFD700; font-weight:700; margin-bottom:8px; }
+.verse-text { font-size:15px; color:white; line-height:1.8; font-weight:500; letter-spacing:0.3px; }
+.verse-text.highlight { color: #FFD700; }
+.game-input-area { display:none; margin-bottom:14px; }
+.game-input { width:100%; padding:12px; background:#0d0d1a; border:2px solid #58c858; border-radius:10px; color:white; font-size:14px; font-family:inherit; outline:none; line-height:1.6; resize:none; }
+.timer-display { font-size:28px; font-weight:900; color:#58c858; text-align:center; margin-bottom:12px; font-family:monospace; }
+.game-btn { width:100%; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:900; font-family:inherit; cursor:pointer; margin-bottom:8px; }
+.game-btn-start { background:linear-gradient(180deg,#FFD700,#FFA000); color:#1a1a2e; box-shadow:0 4px 0 #e65100; }
+.game-btn-close { background:rgba(255,255,255,0.1); color:#aaa; border:1px solid #444; }
+.ranking-box { background:#0d0d1a; border:1px solid #333; border-radius:12px; padding:12px; margin-bottom:12px; }
+.ranking-title { font-size:12px; color:#FFD700; font-weight:700; margin-bottom:8px; }
+.rank-item { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #222; font-size:12px; }
+.rank-item:last-child { border-bottom:none; }
+.rank-num { width:24px; font-weight:700; color:#FFD700; }
+.rank-name { flex:1; color:#eee; }
+.rank-time { color:#58c858; font-weight:700; font-family:monospace; }
+.rank-mine { background:rgba(88,200,88,0.1); border-radius:6px; padding:2px 4px; }
+.result-box { background:#0d0d1a; border:2px solid #58c858; border-radius:12px; padding:16px; text-align:center; margin-bottom:12px; }
+.result-time { font-size:36px; font-weight:900; color:#58c858; font-family:monospace; }
+.result-label { font-size:12px; color:#aaa; margin-top:4px; }
+
+/* 게임 참여 팝업 */
+.popup { background: #1a2a1a; border: 3px solid #58c858; border-radius: 16px; padding: 20px; width: min(300px, 90vw); text-align:center; }
+.popup-title { font-size:16px; font-weight:900; color:#FFD700; margin-bottom:8px; }
+.popup-sub { font-size:12px; color:#aaa; margin-bottom:16px; line-height:1.6; }
+.popup-btns { display:flex; gap:8px; }
+.popup-btn { flex:1; padding:11px; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; }
+.popup-btn-yes { background:#58c858; color:white; }
+.popup-btn-no { background:rgba(255,255,255,0.1); color:#aaa; border:1px solid #444; }
+
+/* 게임 버튼 */
+.game-float-btn {
+  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+  z-index: 50; background: linear-gradient(180deg, #4a90d9, #2060b0);
+  border: none; border-radius: 20px; padding: 10px 20px; color: white;
+  font-size: 13px; font-weight: 900; font-family: inherit;
+  cursor: pointer; box-shadow: 0 3px 0 #1a4080; display: none; white-space: nowrap;
+}
+/* 퀴즈 버튼 (목사님 전용) */
+.quiz-float-btn {
+  position: fixed; right: 14px; bottom: 20px; z-index: 50;
+  background: linear-gradient(180deg, #e04040, #b02020);
+  border: none; border-radius: 20px; padding: 10px 16px; color: white;
+  font-size: 13px; font-weight: 900; font-family: inherit;
+  cursor: pointer; box-shadow: 0 3px 0 #801010; display: none; white-space: nowrap;
+}
+/* 퀴즈 전체 오버레이 */
+.quiz-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.92);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+/* 퀴즈 카드 */
+.quiz-card {
+  width: min(480px, 95vw); background: #fffef0;
+  border: 4px solid #8B6914; border-radius: 20px;
+  padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+.quiz-badge {
+  display: inline-block; background: #8B6914; color: white;
+  font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; margin-bottom: 12px;
+}
+.quiz-question {
+  font-size: clamp(15px, 3vw, 20px); font-weight: 900;
+  color: #3a2000; line-height: 1.6; margin-bottom: 16px;
+  text-align: center;
+}
+.quiz-timer-bar-wrap {
+  background: #e0d0b0; border-radius: 10px; height: 10px;
+  margin-bottom: 8px; overflow: hidden;
+}
+.quiz-timer-bar {
+  height: 100%; background: #58c858; border-radius: 10px;
+  transition: width 1s linear, background 0.3s;
+}
+.quiz-timer-bar.warning { background: #e04040; }
+.quiz-timer-text {
+  font-size: 14px; font-weight: 900; color: #8B6914;
+  text-align: center; margin-bottom: 16px; font-family: monospace;
+}
+/* 입력 */
+.quiz-input-row { display: flex; gap: 8px; margin-bottom: 4px; }
+.quiz-input {
+  flex: 1; padding: 12px; border: 3px solid #8B6914;
+  border-radius: 12px; font-size: 16px; font-family: inherit;
+  background: white; outline: none; text-align: center;
+}
+.quiz-input:focus { border-color: #e04040; }
+.quiz-submit-btn {
+  padding: 12px 18px; background: #e04040; border: none;
+  border-radius: 12px; color: white; font-size: 14px;
+  font-weight: 900; font-family: inherit; cursor: pointer;
+}
+/* OX */
+.quiz-ox-row { display: flex; gap: 12px; margin-bottom: 4px; }
+.quiz-ox-btn {
+  flex: 1; padding: 16px; border: 3px solid #ddd;
+  border-radius: 14px; font-size: 32px; cursor: pointer;
+  background: white; transition: all 0.15s; font-family: inherit;
+}
+.quiz-ox-btn.sel-o { border-color: #58c858; background: #e8f5e9; }
+.quiz-ox-btn.sel-x { border-color: #e04040; background: #ffeaea; }
+/* 4지선다 */
+.quiz-choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.quiz-choice-btn {
+  padding: 12px 8px; border: 2px solid #8B6914;
+  border-radius: 12px; font-size: 13px; font-weight: 600;
+  cursor: pointer; background: white; text-align: center;
+  font-family: inherit; transition: all 0.15s;
+}
+.quiz-choice-btn.selected { border-color: #e04040; background: #ffeaea; }
+/* 정답 공개 */
+.quiz-reveal {
+  background: #e8f5e9; border: 3px solid #58c858;
+  border-radius: 14px; padding: 16px; text-align: center;
+  display: none; margin-top: 12px;
+}
+.quiz-reveal-label { font-size: 12px; color: #388e3c; font-weight: 700; margin-bottom: 6px; }
+.quiz-reveal-answer { font-size: 24px; font-weight: 900; color: #1a6820; margin-bottom: 8px; }
+.quiz-reveal-me { font-size: 15px; font-weight: 700; }
+.quiz-reveal-me.correct { color: #388e3c; }
+.quiz-reveal-me.wrong { color: #e04040; }
+/* 대기 화면 */
+.quiz-waiting {
+  text-align: center; padding: 20px 0;
+}
+.quiz-waiting-title { font-size: 22px; font-weight: 900; color: #3a2000; margin-bottom: 8px; }
+.quiz-waiting-sub { font-size: 13px; color: #888; }
+/* 결과 화면 */
+.quiz-result-card {
+  width: min(420px, 95vw); background: #fffef0;
+  border: 4px solid #8B6914; border-radius: 20px;
+  padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+  max-height: 80vh; overflow-y: auto;
+}
+.quiz-result-title { font-size: 22px; font-weight: 900; color: #3a2000; text-align: center; margin-bottom: 4px; }
+.quiz-result-score { font-size: 52px; font-weight: 900; color: #e04040; text-align: center; }
+.quiz-result-max { font-size: 14px; color: #888; text-align: center; margin-bottom: 16px; }
+.quiz-result-list { border-top: 2px solid #e0d0b0; padding-top: 12px; margin-bottom: 16px; }
+.quiz-result-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid #e0d0b0; font-size: 12px;
+}
+.quiz-result-item .ri-q { color: #555; flex: 1; margin-right: 8px; }
+.quiz-result-item .ri-a { font-weight: 700; white-space: nowrap; }
+.ri-a.correct { color: #388e3c; }
+.ri-a.wrong { color: #e04040; }
+.quiz-result-close {
+  width: 100%; padding: 13px; background: #8B6914;
+  border: none; border-radius: 12px; color: white;
+  font-size: 15px; font-weight: 900; font-family: inherit; cursor: pointer;
+}
+/* 목사님 컨트롤 패널 */
+.quiz-master-ctrl {
+  position: fixed; bottom: 70px; right: 14px; z-index: 110;
+  background: rgba(0,0,0,0.9); border: 2px solid #FFD700;
+  border-radius: 14px; padding: 12px 16px;
+  display: none; flex-direction: column; gap: 8px; min-width: 180px;
+}
+.quiz-master-label { color: #FFD700; font-size: 11px; font-weight: 700; text-align: center; }
+.quiz-ctrl-btn {
+  width: 100%; padding: 10px; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 900; font-family: inherit; cursor: pointer;
+}
+.quiz-ctrl-start { background: #58c858; color: white; }
+.quiz-ctrl-stop { background: #e04040; color: white; }
+#loadingBar { display:none; position:fixed; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,#58c858,#FFD700,#58c858); background-size:200%; animation:shimmer 1s infinite; z-index:9999; }
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+</style>
+</head>
+<body>
+<div id="loadingBar"></div>
+<div class="bg"></div>
+
+<div class="top-bar">
+  <button class="back-btn" onclick="goBackToMarket()">← 마켓</button>
+  <div class="top-title">🏘️ 동산지기 광장</div>
+  <div class="top-right">
+    <div class="online-badge" id="onlineBadge">● 0명</div>
+    <button class="exit-btn" onclick="leavePlaza()">🚪 나가기</button>
+  </div>
+</div>
+
+<div class="users-panel">
+  <div class="users-title">접속중</div>
+  <div id="usersList"></div>
+</div>
+
+<div class="joystick">
+  <div></div>
+  <div class="jbtn" id="jUp" tabindex="-1" onmousedown="return false" ontouchstart="return false">▲</div>
+  <div></div>
+  <div class="jbtn" id="jLeft" tabindex="-1" onmousedown="return false" ontouchstart="return false">◀</div>
+  <div class="jcenter"></div>
+  <div class="jbtn" id="jRight" tabindex="-1" onmousedown="return false" ontouchstart="return false">▶</div>
+  <div></div>
+  <div class="jbtn" id="jDown" tabindex="-1" onmousedown="return false" ontouchstart="return false">▼</div>
+  <div></div>
+</div>
+
+<!-- 게임 버튼 (입장 후 표시) -->
+<button class="game-float-btn" id="gameFloatBtn" onclick="showGamePopup()">📖 말씀 타자 게임</button>
+
+<div class="chat-panel">
+  <div class="chat-box" id="chatBox"></div>
+  <div class="chat-row">
+    <input class="chat-input" id="chatInput" placeholder="메시지..." maxlength="30" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChat();}">
+    <button class="chat-send" onclick="sendChat()">▶</button>
+  </div>
+</div>
+
+<!-- 퀴즈 오버레이 -->
+<div class="quiz-overlay" id="quizOverlay">
+  <!-- 대기 화면 -->
+  <div class="quiz-card" id="quizWaitCard">
+    <div class="quiz-waiting">
+      <div class="quiz-waiting-title">📖 성경 퀴즈 대회</div>
+      <div class="quiz-waiting-sub">잠시 후 퀴즈가 시작됩니다!<br>준비해주세요 😊</div>
+    </div>
+  </div>
+  <!-- 문제 화면 -->
+  <div class="quiz-card" id="quizQCard" style="display:none">
+    <div class="quiz-badge" id="quizBadge">문제 1/5</div>
+    <div class="quiz-question" id="quizQuestion"></div>
+    <div class="quiz-timer-bar-wrap"><div class="quiz-timer-bar" id="quizTimerBar"></div></div>
+    <div class="quiz-timer-text" id="quizTimerText">5초</div>
+    <!-- 빈칸/단답 -->
+    <div class="quiz-input-row" id="quizInputRow" style="display:none">
+      <input class="quiz-input" id="quizInput" placeholder="답 입력..." maxlength="20"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();submitQuizAns();}">
+      <button class="quiz-submit-btn" onclick="submitQuizAns()">제출</button>
+    </div>
+    <!-- OX -->
+    <div class="quiz-ox-row" id="quizOxRow" style="display:none">
+      <button class="quiz-ox-btn" id="quizOX_O" onclick="pickOX('O')">⭕</button>
+      <button class="quiz-ox-btn" id="quizOX_X" onclick="pickOX('X')">❌</button>
+    </div>
+    <!-- 4지선다 -->
+    <div class="quiz-choices-grid" id="quizChoicesGrid" style="display:none"></div>
+    <!-- 정답 공개 -->
+    <div class="quiz-reveal" id="quizReveal">
+      <div class="quiz-reveal-label">✅ 정답</div>
+      <div class="quiz-reveal-answer" id="quizRevealAnswer"></div>
+      <div class="quiz-reveal-me" id="quizRevealMe"></div>
+    </div>
+  </div>
+  <!-- 결과 화면 -->
+  <div class="quiz-result-card" id="quizResultCard" style="display:none">
+    <div class="quiz-result-title">🏆 퀴즈 끝!</div>
+    <div class="quiz-result-score" id="quizResultScore">0</div>
+    <div class="quiz-result-max">/ 25점</div>
+    <div class="quiz-result-list" id="quizResultList"></div>
+    <button class="quiz-result-close" onclick="closeQuizResult()">확인</button>
+  </div>
+</div>
+
+<!-- 목사님 퀴즈 컨트롤 -->
+<div class="quiz-master-ctrl" id="quizMasterCtrl">
+  <div class="quiz-master-label">📋 퀴즈 컨트롤</div>
+  <button class="quiz-ctrl-btn quiz-ctrl-start" id="quizCtrlStart" onclick="startQuiz()">▶ 퀴즈 시작!</button>
+  <button class="quiz-ctrl-btn quiz-ctrl-stop" id="quizCtrlStop" style="display:none" onclick="stopQuiz()">■ 퀴즈 종료</button>
+</div>
+
+<!-- 퀴즈 버튼 (목사님 전용) -->
+<button class="quiz-float-btn" id="quizFloatBtn" onclick="toggleQuizCtrl()">📋 퀴즈 관리</button>
+
+<!-- 캐릭터 선택 모달 -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-title">🏘️ 동산지기 광장</div>
+    <div class="modal-sub">캐릭터를 고르고 이름을 입력해주세요!</div>
+    <input class="name-input" id="nameInput" placeholder="이름 입력 (실명)" maxlength="6">
+    <div class="char-section-title">👤 캐릭터 선택</div>
+    <div class="char-grid" id="charGrid"></div>
+    <button class="enter-btn" id="enterBtn" onclick="enterPlaza()" disabled>🚪 광장 입장!</button>
+  </div>
+</div>
+
+<!-- 게임 참여 팝업 -->
+<div class="modal-bg" id="gamePopup" style="display:none">
+  <div class="popup">
+    <div class="popup-title">🎮 말씀 타자 게임</div>
+    <div class="popup-sub">오늘의 말씀을 가장 빠르게<br>타이핑하는 사람이 1등!<br>재도전은 불가능해요 😊</div>
+    <div class="popup-btns">
+      <button class="popup-btn popup-btn-yes" onclick="openGame()">도전하기!</button>
+      <button class="popup-btn popup-btn-no" onclick="closeGamePopup()">나중에</button>
+    </div>
+  </div>
+</div>
+
+<!-- 게임 모달 -->
+<div class="modal-bg" id="gameModal" style="display:none">
+  <div class="game-modal">
+    <div class="game-title">📖 말씀 타자 게임</div>
+    <div class="game-sub" id="gameDate"></div>
+    <div class="verse-box">
+      <div class="verse-ref" id="verseRef"></div>
+      <div class="verse-text" id="verseText"></div>
+    </div>
+    <div class="timer-display" id="timerDisplay" style="display:none">0.00초</div>
+    <div class="game-input-area" id="gameInputArea">
+      <textarea class="game-input" id="gameInput" rows="3" placeholder="여기에 타이핑하세요..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitGame();}"></textarea>
+    </div>
+    <div class="result-box" id="resultBox" style="display:none">
+      <div class="result-time" id="resultTime"></div>
+      <div class="result-label">내 기록</div>
+    </div>
+    <div class="ranking-box">
+      <div class="ranking-title">🏆 오늘의 랭킹</div>
+      <div id="gameRanking"><div style="color:#666;font-size:11px;text-align:center;padding:8px">아직 도전자가 없어요!</div></div>
+    </div>
+    <button class="game-btn game-btn-start" id="startBtn" onclick="startGame()">▶ START</button>
+    <button class="game-btn game-btn-close" onclick="closeGame()">닫기</button>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, get, remove, onValue, onDisconnect, push, query, limitToLast, orderByChild } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3YZHM-GRqEQDQIR9shFQ7bZMhsBjB-NQ",
+  authDomain: "talentmarket-7e480.firebaseapp.com",
+  databaseURL: "https://talentmarket-7e480-default-rtdb.firebaseio.com",
+  projectId: "talentmarket-7e480",
+  storageBucket: "talentmarket-7e480.firebasestorage.app",
+  messagingSenderId: "1007328330532",
+  appId: "1:1007328330532:web:eae693dd7ff0a6bf33a9b1"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+function showLoading(on) { document.getElementById('loadingBar').style.display = on?'block':'none'; }
+
+// ── 배경 자동 적용 ──
+function applyBackground() {
+  const koreaHour = (new Date().getUTCHours() + 9) % 24;
+  const isNight = koreaHour >= 20 || koreaHour < 6;
+  const isMobile = window.innerWidth < window.innerHeight;
+  const f = isNight ? (isMobile?'bg_night_mobile.png':'bg_night_pc.png') : (isMobile?'bg_day_mobile.png':'bg_day_pc.png');
+  document.querySelector('.bg').style.backgroundImage = `url('${f}')`;
+}
+applyBackground();
+setInterval(applyBackground, 60000);
+window.addEventListener('resize', applyBackground);
+
+// ── 목사님 여부 체크 (index.html에서 명시적으로 설정한 경우만) ──
+const isPastor = sessionStorage.getItem('isPastor') === 'true';
+
+// ── 세션 저장 ──
+const SESSION_KEY = 'plaza_session';
+function saveSession(name, charId) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({name, charId})); }
+function loadSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; } }
+
+// ── 캐릭터 목록 ──
+const CHARS = [
+  {id:'char1', img:'char1.png', n:'기본청년'},
+  {id:'char2', img:'char2.png', n:'안경청년'},
+  {id:'char3', img:'char3.png', n:'활동형'},
+  {id:'char4', img:'char4.png', n:'기본자매'},
+  {id:'char5', img:'char5.png', n:'단발자매'},
+  {id:'char6', img:'char6.png', n:'긴머리자매'},
+  {id:'char7', img:'char7.png', n:'남무영목사님', pastorOnly:true},
+];
+
+let selChar = null;
+const charGridEl = document.getElementById('charGrid');
+CHARS.forEach((c, idx) => {
+  const d = document.createElement('div');
+  const locked = c.pastorOnly && !isPastor;
+  // 1~3번: 3열, 4~7번: 4열(wide 클래스)
+  d.className = 'char-opt' + (idx >= 3 ? ' wide' : '') + (c.pastorOnly?' pastor-only':'') + (locked?' locked':'');
+  d.innerHTML = `<img src="${c.img}" style="width:48px;height:62px;object-fit:contain"><span>${c.n}${c.pastorOnly?'<br>👑':''}${locked?'<br>🔒':''}</span>`;
+  if (!locked) {
+    d.onclick = () => {
+      document.querySelectorAll('.char-opt').forEach(x=>x.classList.remove('sel'));
+      d.classList.add('sel'); selChar = c; checkReady();
+    };
+  }
+  charGridEl.appendChild(d);
+});
+
+const prev = loadSession();
+if (prev) {
+  document.getElementById('nameInput').value = prev.name;
+  const found = CHARS.findIndex(c => c.id === prev.charId && !(c.pastorOnly && !isPastor));
+  if (found >= 0) charGridEl.children[found].click();
+}
+document.getElementById('nameInput').addEventListener('input', checkReady);
+function checkReady() {
+  document.getElementById('enterBtn').disabled = !document.getElementById('nameInput').value.trim() || !selChar;
+}
+
+// ── 세션 있으면 자동 입장 ──
+if (prev && prev.name && prev.charId) {
+  const foundChar = CHARS.find(c => c.id === prev.charId && !(c.pastorOnly && !isPastor));
+  if (foundChar) {
+    // 모달 즉시 숨기고 토스트 표시
+    document.getElementById('modal').style.display = 'none';
+    const toast = document.createElement('div');
+    toast.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,20,60,0.92);color:white;padding:16px 24px;border-radius:16px;border:2px solid #58c858;font-size:14px;font-weight:700;z-index:9999;text-align:center;`;
+    toast.innerHTML = `${foundChar.img ? `<img src="${foundChar.img}" style="width:50px;height:65px;object-fit:contain;display:block;margin:0 auto 8px">` : ''}${prev.name}님으로 입장 중...`;
+    document.body.appendChild(toast);
+    selChar = foundChar;
+    setTimeout(() => {
+      toast.remove();
+      enterPlaza();
+    }, 1200);
+  }
+}
+
+// ── 플레이어 상태 ──
+const myId = 'u_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
+let myX, myY, myName='', myImg='';
+const bubbleTimers = {};
+const moveState = {};
+const SPEED = 3;
+let W = window.innerWidth, H = window.innerHeight;
+let myRef = null;
+window.addEventListener('resize', ()=>{W=window.innerWidth;H=window.innerHeight;});
+
+// ── 마켓으로 (세션 유지) ──
+window.goBackToMarket = function() {
+  // Firebase에서 캐릭터 제거하지 않고 세션 유지한 채 이동
+  if (myRef) remove(myRef);
+  window.location.href = 'index.html';
+};
+
+// ── 나가기 (세션 초기화) ──
+window.leavePlaza = async function() {
+  sessionStorage.removeItem(SESSION_KEY); // 명시적 나가기 시 세션 초기화
+  if (myRef) {
+    await push(ref(db,'chat'), {system:true, text:`👤 ${myName}님이 퇴장했어요.`, t:Date.now()});
+    await remove(myRef);
+  }
+  window.location.href = 'index.html';
+};
+window.addEventListener('beforeunload', ()=>{ if(myRef) remove(myRef); });
+
+function renderPlayer(id, name, emoji, x, y, isMe) {
+  let el = document.getElementById('pl_'+id);
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'pl_'+id;
+    el.className = 'player'+(isMe?' my-player':'');
+    document.body.appendChild(el);
+  }
+  el.style.left = x+'px';
+  el.style.top = y+'px';
+  if (el.dataset.emoji !== emoji) {
+    el.dataset.emoji = emoji;
+    const bubble = el.querySelector('.player-bubble');
+    el.innerHTML = `<img class="player-sprite" src="${emoji}"/><div class="player-shadow"></div><div class="player-name">${name}</div>`;
+    if (bubble) el.insertBefore(bubble, el.firstChild);
+  }
+}
+
+let lastPosUpdate = 0;
+function updateMyPos() {
+  renderPlayer(myId, myName, myImg, myX, myY, true);
+  const now = Date.now();
+  if (now - lastPosUpdate > 100) { // 100ms마다만 Firebase 업데이트
+    lastPosUpdate = now;
+    if (myRef) set(myRef, {name:myName, emoji:myImg, x:myX/W, y:myY/H, t:now});
+  }
+}
+
+// ── 조이스틱 ──
+['Up','Down','Left','Right'].forEach(dir => {
+  const btn = document.getElementById('j'+dir);
+  const d = dir.toLowerCase();
+  btn.addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    e.stopPropagation();
+    btn.blur();
+    moveState[d]=true;
+    btn.classList.add('pressed');
+  });
+  btn.addEventListener('pointerup', ()=>{moveState[d]=false;btn.classList.remove('pressed');});
+  btn.addEventListener('pointerleave', ()=>{moveState[d]=false;btn.classList.remove('pressed');});
+  btn.addEventListener('focus', e=>{ e.preventDefault(); btn.blur(); });
+});
+document.addEventListener('keydown', e=>{
+  if(['ArrowLeft','a'].includes(e.key)) moveState.left=true;
+  if(['ArrowRight','d'].includes(e.key)) moveState.right=true;
+  if(['ArrowUp','w'].includes(e.key)) moveState.up=true;
+  if(['ArrowDown','s'].includes(e.key)) moveState.down=true;
+});
+document.addEventListener('keyup', e=>{
+  if(['ArrowLeft','a'].includes(e.key)) moveState.left=false;
+  if(['ArrowRight','d'].includes(e.key)) moveState.right=false;
+  if(['ArrowUp','w'].includes(e.key)) moveState.up=false;
+  if(['ArrowDown','s'].includes(e.key)) moveState.down=false;
+});
+setInterval(()=>{
+  if(!myName) return;
+  let moved=false;
+  if(moveState.left)  {myX=Math.max(20,myX-SPEED);moved=true;}
+  if(moveState.right) {myX=Math.min(W-20,myX+SPEED);moved=true;}
+  if(moveState.up)    {myY=Math.max(H*0.1,myY-SPEED);moved=true;}
+  if(moveState.down)  {myY=Math.min(H*0.85,myY+SPEED);moved=true;}
+  if(moved) updateMyPos();
+},16);
+
+// ── 게시판 클릭 감지 (배경 우측 게시판 영역) ──
+// ── 게임 버튼 클릭 ──
+window.showGamePopup = function() {
+  if (!myName) return;
+  const todayKey = getTodayKey();
+  const played = localStorage.getItem(`game_played_${myName}_${todayKey}`);
+  if (played) {
+    alert('오늘은 이미 도전했어요! 내일 다시 도전하세요 😊');
+    return;
+  }
+  document.getElementById('gamePopup').style.display = 'flex';
+};
+
+// ── 입장 ──
+window.enterPlaza = async function() {
+  myName = document.getElementById('nameInput').value.trim();
+  myImg = selChar.img;
+
+  showLoading(true);
+  const snap = await new Promise(resolve => onValue(ref(db,'plaza'), s=>resolve(s), {onlyOnce:true}));
+  showLoading(false);
+
+  const existing = snap.val()||{};
+  const isDup = Object.values(existing).some(p=>p.name===myName);
+  if (isDup) { alert(`"${myName}" 닉네임은 이미 사용 중이에요!`); return; }
+
+  saveSession(myName, selChar.id);
+  myX = W/2 + (Math.random()-0.5)*120;
+  myY = H*0.65;
+  document.getElementById('modal').style.display = 'none';
+
+  myRef = ref(db,`plaza/${myId}`);
+  set(myRef, {name:myName, emoji:myImg, x:myX/W, y:myY/H, t:Date.now()});
+  onDisconnect(myRef).remove();
+
+  // heartbeat: 30초마다 t 갱신 (20초→30초로 줄임)
+  setInterval(()=>{
+    if(myRef&&myName) set(myRef,{name:myName,emoji:myImg,x:myX/W,y:myY/H,t:Date.now()});
+  },30000);
+
+  // plaza 리스너 (throttle 적용 - 500ms마다만 렌더)
+  let plazaRenderTimer = null;
+  onValue(ref(db,'plaza'), snap=>{
+    if (plazaRenderTimer) return; // throttle
+    plazaRenderTimer = setTimeout(()=>{
+      plazaRenderTimer = null;
+      const data=snap.val()||{};
+      const now=Date.now();
+      Object.entries(data).forEach(([id,p])=>{
+        if(id===myId) return;
+        if(p.t&&now-p.t>60000) remove(ref(db,`plaza/${id}`));
+      });
+      document.querySelectorAll('.player:not(.my-player)').forEach(el=>el.remove());
+      const active=Object.entries(data).filter(([id,p])=>id!==myId&&p.t&&now-p.t<=60000);
+      active.forEach(([id,p])=>renderPlayer(id,p.name,p.emoji,p.x*W,p.y*H,false));
+      document.getElementById('onlineBadge').textContent=`● ${active.length+1}명`;
+      document.getElementById('usersList').innerHTML=
+        [{name:myName},...active.map(([,p])=>({name:p.name}))]
+        .map(p=>`<div class="user-item"><div class="user-dot"></div>${p.name}</div>`).join('');
+    }, 500);
+  });
+
+  let lastSeenT = Date.now();
+  onValue(query(ref(db,'chat'),limitToLast(50)), snap=>{
+    const data=snap.val()||{};
+    const msgs=Object.values(data).sort((a,b)=>(a.t||0)-(b.t||0));
+    const box=document.getElementById('chatBox');
+    const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<30;
+    box.innerHTML=msgs.map(m=>
+      m.system
+        ?`<div class="chat-msg sys"><span class="ct">${m.text}</span></div>`
+        :`<div class="chat-msg"><span class="cn">${m.name}</span> <span class="ct">${m.text}</span></div>`
+    ).join('');
+    if(atBottom) box.scrollTop=box.scrollHeight;
+
+    const now2=Date.now();
+    const newMsgs=msgs.filter(m=>!m.system&&m.t&&m.t>lastSeenT&&m.t>now2-10000);
+    if(newMsgs.length>0) lastSeenT=Math.max(...newMsgs.map(m=>m.t));
+    const latestByName={};
+    newMsgs.forEach(m=>{if(!latestByName[m.name]||m.t>latestByName[m.name].t) latestByName[m.name]=m;});
+    Object.values(latestByName).forEach(m=>{
+      if(m.name===myName) return;
+      document.querySelectorAll('.player').forEach(el=>{
+        const nameEl=el.querySelector('.player-name');
+        if(nameEl&&nameEl.textContent.trim()===m.name.trim()){
+          let b=el.querySelector('.player-bubble');
+          if(!b){b=document.createElement('div');b.className='player-bubble';el.insertBefore(b,el.firstChild);}
+          b.textContent=m.text;
+          clearTimeout(bubbleTimers[m.name]);
+          bubbleTimers[m.name]=setTimeout(()=>{if(b.parentNode)b.remove();},5000);
+        }
+      });
+    });
+  });
+
+  push(ref(db,'chat'),{system:true,text:`👤 ${myName}님이 입장했어요!`,t:Date.now()});
+  renderPlayer(myId,myName,myImg,myX,myY,true);
+  // 게임 랭킹은 게임 열 때만 로드 (자동 로드 제거)
+
+  // 게임 버튼 표시
+  document.getElementById('gameFloatBtn').style.display = 'block';
+
+  // 목사님이면 퀴즈 버튼 표시
+  if (isPastor) {
+    document.getElementById('quizFloatBtn').style.display = 'block';
+  }
+
+  // 퀴즈 리스너 시작
+  initQuizListener();
+};
+
+// ── 채팅 ──
+window.sendChat = function() {
+  const input=document.getElementById('chatInput');
+  const text=input.value.trim();
+  if(!text||!myName) return;
+  input.value='';
+  push(ref(db,'chat'),{name:myName,emoji:myImg,text,t:Date.now()});
+  const el=document.getElementById('pl_'+myId);
+  if(el){
+    let b=el.querySelector('.player-bubble');
+    if(!b){b=document.createElement('div');b.className='player-bubble';el.insertBefore(b,el.firstChild);}
+    b.textContent=text;
+    clearTimeout(bubbleTimers[myId]);
+    bubbleTimers[myId]=setTimeout(()=>{if(b.parentNode)b.remove();},5000);
+  }
+};
+
+// ══════════════════════════════════
+// ── 미니게임 ──
+// ══════════════════════════════════
+
+// 오늘의 말씀 목록 (날짜 기준으로 자동 선택)
+const VERSES = [
+  {ref:'요한복음 3:16', text:'하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니 이는 그를 믿는 자마다 멸망하지 않고 영생을 얻게 하려 하심이라'},
+  {ref:'빌립보서 4:13', text:'내게 능력 주시는 자 안에서 내가 모든 것을 할 수 있느니라'},
+  {ref:'갈라디아서 2:20', text:'내가 그리스도와 함께 십자가에 못 박혔나니 그런즉 이제는 내가 사는 것이 아니요 오직 내 안에 그리스도께서 사시는 것이라'},
+  {ref:'로마서 8:28', text:'우리가 알거니와 하나님을 사랑하는 자 곧 그의 뜻대로 부르심을 입은 자들에게는 모든 것이 합력하여 선을 이루느니라'},
+  {ref:'시편 23:1', text:'여호와는 나의 목자시니 내게 부족함이 없으리로다'},
+  {ref:'잠언 3:5-6', text:'너는 마음을 다하여 여호와를 신뢰하고 네 명철을 의지하지 말라 너는 범사에 그를 인정하라 그리하면 네 길을 지도하시리라'},
+  {ref:'이사야 40:31', text:'오직 여호와를 앙망하는 자는 새 힘을 얻으리니 독수리가 날개치며 올라감 같을 것이요 달음박질하여도 곤비하지 아니하겠고 걸어가도 피곤하지 아니하리로다'},
+  {ref:'마태복음 11:28', text:'수고하고 무거운 짐 진 자들아 다 내게로 오라 내가 너희를 쉬게 하리라'},
+  {ref:'에베소서 2:8', text:'너희는 그 은혜에 의하여 믿음으로 말미암아 구원을 받았으니 이것은 너희에게서 난 것이 아니요 하나님의 선물이라'},
+  {ref:'고린도전서 13:4-5', text:'사랑은 오래 참고 사랑은 온유하며 시기하지 아니하며 사랑은 자랑하지 아니하며 교만하지 아니하며 무례히 행하지 아니하며 자기의 유익을 구하지 아니하며'},
+  {ref:'여호수아 1:9', text:'내가 네게 명령한 것이 아니냐 강하고 담대하라 두려워하지 말며 놀라지 말라 네가 어디로 가든지 네 하나님 여호와가 너와 함께 하느니라'},
+  {ref:'신명기 6:5', text:'너는 마음을 다하고 뜻을 다하고 힘을 다하여 네 하나님 여호와를 사랑하라'},
+  {ref:'예레미야 29:11', text:'여호와의 말씀이니라 너희를 향한 나의 생각을 내가 아나니 평안이요 재앙이 아니니라 너희에게 미래와 희망을 주는 것이니라'},
+  {ref:'히브리서 11:1', text:'믿음은 바라는 것들의 실상이요 보이지 않는 것들의 증거니'},
+];
+
+function getTodayKey() {
+  const now = new Date();
+  const korea = new Date(now.getTime() + 9*60*60*1000);
+  return `${korea.getUTCFullYear()}-${String(korea.getUTCMonth()+1).padStart(2,'0')}-${String(korea.getUTCDate()).padStart(2,'0')}`;
+}
+
+function getTodayVerse() {
+  const key = getTodayKey();
+  const dayNum = parseInt(key.replace(/-/g,''));
+  return VERSES[dayNum % VERSES.length];
+}
+
+let gameStartTime = null;
+let gameTimer = null;
+let gameFinished = false;
+
+window.openGame = function() {
+  document.getElementById('gamePopup').style.display = 'none';
+  const verse = getTodayVerse();
+  const todayKey = getTodayKey();
+  document.getElementById('verseRef').textContent = verse.ref;
+  document.getElementById('verseText').textContent = verse.text;
+  document.getElementById('gameDate').textContent = `📅 ${todayKey} 오늘의 말씀`;
+  document.getElementById('startBtn').style.display = 'block';
+  document.getElementById('gameInputArea').style.display = 'none';
+  document.getElementById('timerDisplay').style.display = 'none';
+  document.getElementById('resultBox').style.display = 'none';
+  gameFinished = false;
+  gameStartTime = null;
+  document.getElementById('gameModal').style.display = 'flex';
+  loadGameRanking();
+};
+
+window.startGame = function() {
+  document.getElementById('startBtn').style.display = 'none';
+  document.getElementById('gameInputArea').style.display = 'block';
+  document.getElementById('timerDisplay').style.display = 'block';
+  const gameInputEl = document.getElementById('gameInput');
+  gameInputEl.value = '';
+  gameInputEl.focus();
+
+  // 복붙 차단
+  gameInputEl.addEventListener('paste', e=>{ e.preventDefault(); alert('붙여넣기는 사용할 수 없어요! 직접 타이핑해주세요 😊'); });
+  gameInputEl.addEventListener('drop', e=>{ e.preventDefault(); });
+  gameInputEl.addEventListener('contextmenu', e=>{ e.preventDefault(); });
+
+  gameStartTime = Date.now();
+  gameTimer = setInterval(()=>{
+    const elapsed = (Date.now()-gameStartTime)/1000;
+    document.getElementById('timerDisplay').textContent = elapsed.toFixed(2)+'초';
+  },50);
+};
+
+window.submitGame = async function() {
+  if (!gameStartTime || gameFinished) return;
+  const input = document.getElementById('gameInput').value;
+  const verse = getTodayVerse();
+
+  // 검증: 입력값이 원문과 80% 이상 일치해야 제출 가능
+  const normalize = s => s.replace(/\s+/g,' ').trim();
+  const inputNorm = normalize(input);
+  const verseNorm = normalize(verse.text);
+
+  // 유사도 체크 (글자 단위)
+  const minLen = Math.min(inputNorm.length, verseNorm.length);
+  let match = 0;
+  for (let i=0; i<minLen; i++) { if(inputNorm[i]===verseNorm[i]) match++; }
+  const similarity = minLen > 0 ? match/verseNorm.length : 0;
+
+  if (inputNorm.length < verseNorm.length * 0.8) {
+    alert(`아직 완성되지 않았어요!\n말씀을 끝까지 입력해야 제출할 수 있어요 📖`);
+    return;
+  }
+  if (similarity < 0.7) {
+    alert(`너무 많이 틀렸어요! 다시 시도해주세요 😊\n(정확도: ${Math.round(similarity*100)}%)`);
+    document.getElementById('gameInput').value = '';
+    document.getElementById('gameInput').focus();
+    return;
+  }
+
+  gameFinished = true;
+  clearInterval(gameTimer);
+  const elapsed = (Date.now()-gameStartTime)/1000;
+
+  document.getElementById('gameInputArea').style.display = 'none';
+  document.getElementById('resultBox').style.display = 'block';
+  document.getElementById('resultTime').textContent = elapsed.toFixed(2)+'초';
+  document.getElementById('resultBox').innerHTML += `<div style="font-size:11px;color:#58c858;margin-top:6px">정확도 ${Math.round(similarity*100)}%</div>`;
+
+  const todayKey = getTodayKey();
+  localStorage.setItem(`game_played_${myName}_${todayKey}`, '1');
+
+  await set(ref(db,`game/${todayKey}/${myName.replace(/[.#$/[\]]/g,'_')}`), {
+    name: myName, time: elapsed, accuracy: Math.round(similarity*100), t: Date.now()
+  });
+  loadGameRanking();
+};
+
+async function loadGameRanking() {
+  const todayKey = getTodayKey();
+  const snap = await get(ref(db,`game/${todayKey}`));
+  const data = snap.val()||{};
+  const sorted = Object.values(data).sort((a,b)=>a.time-b.time);
+  const rankEl = document.getElementById('gameRanking');
+  if (!rankEl) return;
+  if (sorted.length===0) {
+    rankEl.innerHTML = '<div style="color:#666;font-size:11px;text-align:center;padding:8px">아직 도전자가 없어요!</div>';
+    return;
+  }
+  const medals = ['🥇','🥈','🥉'];
+  rankEl.innerHTML = sorted.slice(0,10).map((r,i)=>`
+    <div class="rank-item ${r.name===myName?'rank-mine':''}">
+      <div class="rank-num">${medals[i]||`${i+1}`}</div>
+      <div class="rank-name">${r.name}</div>
+      <div class="rank-time">${r.time.toFixed(2)}초</div>
+    </div>
+  `).join('');
+}
+
+window.closeGamePopup = function() { document.getElementById('gamePopup').style.display='none'; };
+window.closeGame = function() {
+  clearInterval(gameTimer);
+  document.getElementById('gameModal').style.display='none';
+};
+
+// ══════════════════════════════════
+// ── 성경 퀴즈 시스템 (재설계) ──
+// ══════════════════════════════════
+
+const QUIZ_BANK = [
+  {type:'ox', q:'다윗은 골리앗을 물매돌로 쓰러뜨렸다', a:'O'},
+  {type:'ox', q:'노아의 방주에는 동물이 암수 각 2마리씩 탔다', a:'O'},
+  {type:'ox', q:'요나는 고래 뱃속에서 7일을 보냈다', a:'X', explain:'3일'},
+  {type:'ox', q:'모세는 홍해를 지팡이로 갈랐다', a:'O'},
+  {type:'ox', q:'삼손의 힘의 비밀은 수염이었다', a:'X', explain:'머리카락'},
+  {type:'ox', q:'예수님이 가나의 혼인잔치에서 물을 포도주로 바꾸셨다', a:'O'},
+  {type:'ox', q:'솔로몬은 이스라엘의 두 번째 왕이다', a:'X', explain:'세 번째 왕'},
+  {type:'blank', q:'여호와는 나의 ___시니 내게 부족함이 없으리로다 (시편 23:1)', a:'목자'},
+  {type:'blank', q:'하나님이 세상을 이처럼 ___ 하사 독생자를 주셨으니 (요한복음 3:16)', a:'사랑'},
+  {type:'blank', q:'내게 능력 주시는 자 안에서 내가 모든 것을 ___ 수 있느니라 (빌립보서 4:13)', a:'할'},
+  {type:'blank', q:'믿음은 바라는 것들의 ___이요 보이지 않는 것들의 증거니 (히브리서 11:1)', a:'실상'},
+  {type:'blank', q:'강하고 ___하라 두려워하지 말며 놀라지 말라 (여호수아 1:9)', a:'담대'},
+  {type:'blank', q:'너는 마음을 다하여 여호와를 ___하고 네 명철을 의지하지 말라 (잠언 3:5)', a:'신뢰'},
+  {type:'choice', q:'예수님이 태어나신 곳은?', a:'베들레헴', choices:['예루살렘','베들레헴','나사렛','갈릴리']},
+  {type:'choice', q:'최후의 만찬에서 예수님을 배신한 제자는?', a:'유다', choices:['베드로','요한','유다','마태']},
+  {type:'choice', q:'십계명을 받은 산의 이름은?', a:'시내산', choices:['감람산','시내산','갈멜산','헤르몬산']},
+  {type:'choice', q:'창세기에서 하나님이 세상을 창조하신 기간은?', a:'6일', choices:['3일','5일','6일','7일']},
+  {type:'choice', q:'바울이 쓴 편지가 아닌 것은?', a:'요한복음', choices:['로마서','갈라디아서','요한복음','빌립보서']},
+  {type:'short', q:'예수님의 열두 제자 중 세리 출신 제자의 이름은?', a:'마태'},
+  {type:'short', q:'구약성경에서 가장 긴 책은?', a:'시편'},
+  {type:'short', q:'신약성경의 첫 번째 책은?', a:'마태복음'},
+  {type:'short', q:'예수님이 세례를 받으신 강의 이름은?', a:'요단강'},
+  {type:'short', q:'성경은 총 몇 권인가요? (숫자)', a:'66'},
+  {type:'short', q:'오병이어 기적에서 사용된 빵의 수는? (숫자)', a:'5'},
+];
+
+// 퀴즈 상태
+let quizState = {
+  active: false,
+  qIdx: 0,
+  questions: [],
+  myAnswer: null,
+  answered: false,
+  score: 0,
+  history: [],
+  timerInterval: null,
+  listenerUnsubscribe: null,
+};
+
+function resetQuizState() {
+  clearInterval(quizState.timerInterval);
+  quizState = {
+    active: false, qIdx: 0, questions: [],
+    myAnswer: null, answered: false,
+    score: 0, history: [],
+    timerInterval: null,
+    listenerUnsubscribe: quizState.listenerUnsubscribe,
+  };
+}
+
+// Firebase 퀴즈 리스너 (한 번만 등록)
+function initQuizListener() {
+  if (quizState.listenerUnsubscribe) return; // 중복 방지
+  quizState.listenerUnsubscribe = onValue(ref(db, 'quiz'), snap => {
+    const data = snap.val();
+    if (!data || !data.status) {
+      if (quizState.active) closeQuizOverlay();
+      return;
+    }
+    handleQuizState(data);
+  });
+}
+
+function handleQuizState(data) {
+  const overlay = document.getElementById('quizOverlay');
+  overlay.style.display = 'flex';
+
+  if (data.status === 'waiting') {
+    showQuizWaiting();
+  } else if (data.status === 'question') {
+    const q = data.currentQ;
+    const idx = data.qIdx || 0;
+    // 같은 문제면 다시 렌더 안함
+    if (quizState.active && quizState.qIdx === idx && quizState.answered) return;
+    quizState.active = true;
+    quizState.qIdx = idx;
+    quizState.answered = false;
+    quizState.myAnswer = null;
+    showQuizQuestion(q, idx, data.startedAt);
+  } else if (data.status === 'reveal') {
+    showQuizReveal(data.currentQ, data.answers || {});
+  } else if (data.status === 'finished') {
+    showQuizFinalResult();
+  }
+}
+
+function showQuizWaiting() {
+  document.getElementById('quizWaitCard').style.display = 'block';
+  document.getElementById('quizQCard').style.display = 'none';
+  document.getElementById('quizResultCard').style.display = 'none';
+}
+
+function showQuizQuestion(q, idx, startedAt) {
+  document.getElementById('quizWaitCard').style.display = 'none';
+  document.getElementById('quizQCard').style.display = 'block';
+  document.getElementById('quizResultCard').style.display = 'none';
+  document.getElementById('quizReveal').style.display = 'none';
+
+  document.getElementById('quizBadge').textContent = `문제 ${idx+1} / 5`;
+  document.getElementById('quizQuestion').textContent = q.q;
+
+  // 입력 초기화
+  document.getElementById('quizInputRow').style.display = 'none';
+  document.getElementById('quizOxRow').style.display = 'none';
+  document.getElementById('quizChoicesGrid').style.display = 'none';
+  document.getElementById('quizInput').value = '';
+  document.getElementById('quizInput').disabled = false;
+  document.querySelectorAll('.quiz-ox-btn').forEach(b => b.className = 'quiz-ox-btn');
+
+  if (q.type === 'blank' || q.type === 'short') {
+    document.getElementById('quizInputRow').style.display = 'flex';
+    setTimeout(() => document.getElementById('quizInput').focus(), 100);
+  } else if (q.type === 'ox') {
+    document.getElementById('quizOxRow').style.display = 'flex';
+  } else if (q.type === 'choice') {
+    const grid = document.getElementById('quizChoicesGrid');
+    grid.style.display = 'grid';
+    grid.innerHTML = q.choices.map(c =>
+      `<button class="quiz-choice-btn" onclick="pickChoice('${c.replace(/'/g,"\'")}' )">${c}</button>`
+    ).join('');
+  }
+
+  // 타이머 (서버 startedAt 기준으로 남은 시간 계산)
+  clearInterval(quizState.timerInterval);
+  const elapsed = (Date.now() - (startedAt || Date.now())) / 1000;
+  let timeLeft = Math.max(0, Math.ceil(5 - elapsed));
+
+  const bar = document.getElementById('quizTimerBar');
+  const txt = document.getElementById('quizTimerText');
+  bar.style.width = (timeLeft / 5 * 100) + '%';
+  bar.className = 'quiz-timer-bar' + (timeLeft <= 2 ? ' warning' : '');
+  txt.textContent = timeLeft + '초';
+
+  if (timeLeft <= 0) { handleTimeout(); return; }
+
+  quizState.timerInterval = setInterval(() => {
+    timeLeft--;
+    bar.style.width = (timeLeft / 5 * 100) + '%';
+    bar.className = 'quiz-timer-bar' + (timeLeft <= 2 ? ' warning' : '');
+    txt.textContent = timeLeft + '초';
+    if (timeLeft <= 0) {
+      clearInterval(quizState.timerInterval);
+      if (!quizState.answered) handleTimeout();
+    }
+  }, 1000);
+}
+
+function handleTimeout() {
+  if (quizState.answered) return;
+  quizState.answered = true;
+  quizState.myAnswer = '(미입력)';
+  saveMyAnswer('(미입력)');
+  document.getElementById('quizInput').disabled = true;
+}
+
+function saveMyAnswer(ans) {
+  set(ref(db, `quiz/answers/${myName.replace(/[.#$\[\]]/g,'_')}`), ans);
+}
+
+window.submitQuizAns = function() {
+  if (quizState.answered) return;
+  const val = document.getElementById('quizInput').value.trim();
+  if (!val) return;
+  clearInterval(quizState.timerInterval);
+  quizState.answered = true;
+  quizState.myAnswer = val;
+  document.getElementById('quizInput').disabled = true;
+  document.getElementById('quizTimerText').textContent = '제출완료!';
+  document.getElementById('quizTimerBar').style.width = '100%';
+  document.getElementById('quizTimerBar').className = 'quiz-timer-bar';
+  saveMyAnswer(val);
+};
+
+window.pickOX = function(val) {
+  if (quizState.answered) return;
+  clearInterval(quizState.timerInterval);
+  quizState.answered = true;
+  quizState.myAnswer = val;
+  document.getElementById('quizOX_O').className = 'quiz-ox-btn' + (val==='O'?' sel-o':'');
+  document.getElementById('quizOX_X').className = 'quiz-ox-btn' + (val==='X'?' sel-x':'');
+  document.getElementById('quizTimerText').textContent = '제출완료!';
+  saveMyAnswer(val);
+};
+
+window.pickChoice = function(val) {
+  if (quizState.answered) return;
+  clearInterval(quizState.timerInterval);
+  quizState.answered = true;
+  quizState.myAnswer = val;
+  document.querySelectorAll('.quiz-choice-btn').forEach(b => {
+    b.className = 'quiz-choice-btn' + (b.textContent === val ? ' selected' : '');
+  });
+  document.getElementById('quizTimerText').textContent = '제출완료!';
+  saveMyAnswer(val);
+};
+
+function showQuizReveal(q, answers) {
+  clearInterval(quizState.timerInterval);
+  const correct = q.a;
+  const myAns = quizState.myAnswer || '(미입력)';
+  const isCorrect = myAns !== '(미입력)' && myAns.trim() === correct.trim();
+
+  if (isCorrect) quizState.score += 5;
+  quizState.history.push({
+    q: q.q.length > 22 ? q.q.substring(0,22)+'...' : q.q,
+    myA: myAns, correct, isCorrect
+  });
+
+  // 정답 공개
+  document.getElementById('quizTimerText').style.display = 'none';
+  document.getElementById('quizTimerBar').parentElement.style.display = 'none';
+  document.getElementById('quizReveal').style.display = 'block';
+  document.getElementById('quizRevealAnswer').textContent = correct + (q.explain ? ` (${q.explain})` : '');
+  const meEl = document.getElementById('quizRevealMe');
+  if (myAns === '(미입력)') {
+    meEl.textContent = '⏰ 시간 초과!'; meEl.className = 'quiz-reveal-me wrong';
+  } else if (isCorrect) {
+    meEl.textContent = '🎉 정답! +5 데나리온'; meEl.className = 'quiz-reveal-me correct';
+  } else {
+    meEl.textContent = `❌ 오답 (내 답: ${myAns})`; meEl.className = 'quiz-reveal-me wrong';
+  }
+
+  // 말풍선
+  Object.entries(answers).forEach(([name, ans]) => {
+    const isRight = ans.trim() === correct.trim();
+    const playerEls = document.querySelectorAll('.player');
+    playerEls.forEach(el => {
+      const nameEl = el.querySelector('.player-name');
+      if (nameEl && nameEl.textContent.trim() === name.replace(/_/g,' ').trim()) {
+        let b = el.querySelector('.player-bubble');
+        if (!b) { b = document.createElement('div'); b.className='player-bubble'; el.insertBefore(b,el.firstChild); }
+        b.textContent = ans;
+        b.style.borderColor = isRight ? '#58c858' : '#e04040';
+        b.style.background = isRight ? '#e8f5e9' : '#ffeaea';
+        clearTimeout(bubbleTimers[name]);
+        bubbleTimers[name] = setTimeout(()=>{ if(b.parentNode) b.remove(); }, 4000);
+      }
+    });
+  });
+}
+
+function showQuizFinalResult() {
+  clearInterval(quizState.timerInterval);
+  document.getElementById('quizWaitCard').style.display = 'none';
+  document.getElementById('quizQCard').style.display = 'none';
+  document.getElementById('quizResultCard').style.display = 'block';
+  document.getElementById('quizResultScore').textContent = quizState.score;
+
+  const list = document.getElementById('quizResultList');
+  list.innerHTML = quizState.history.map(h => `
+    <div class="quiz-result-item">
+      <span class="ri-q">${h.q}</span>
+      <span class="ri-a ${h.isCorrect?'correct':'wrong'}">${h.isCorrect?'✅':'❌'} ${h.myA}</span>
+    </div>
+  `).join('');
+
+  // 데나리온 적립
+  if (quizState.score > 0 && myName) {
+    const GAS = 'https://script.google.com/macros/s/AKfycbxoVhMwEQuxXsQX_8GzzucY6LJggktnZW7SKfXXf23DGiJVzzdJb-1Za0zatedIbW6e/exec';
+    const form = new FormData();
+    form.append('data', JSON.stringify({
+      action:'submit', name:myName,
+      actions:[{id:'quiz',name:'퀴즈 정답 보상',coins:quizState.score}],
+      totalCoins:quizState.score, memo:`퀴즈 ${quizState.score}점`, photos:[], manual:true
+    }));
+    fetch(GAS, {method:'POST', body:form})
+      .then(r=>r.json())
+      .then(res=>{ if(res.id) return fetch(`${GAS}?action=approve&id=${res.id}`); })
+      .catch(()=>{});
+  }
+}
+
+function closeQuizOverlay() {
+  document.getElementById('quizOverlay').style.display = 'none';
+  resetQuizState();
+}
+
+window.closeQuizResult = function() {
+  closeQuizOverlay();
+  // Firebase 세션 초기화
+  remove(ref(db,'quiz'));
+};
+
+// 목사님 컨트롤
+window.toggleQuizCtrl = function() {
+  const p = document.getElementById('quizMasterCtrl');
+  p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
+};
+
+window.startQuiz = async function() {
+  const shuffled = [...QUIZ_BANK].sort(()=>Math.random()-0.5).slice(0,5);
+  quizState.questions = shuffled;
+  quizState.score = 0;
+  quizState.history = [];
+
+  await set(ref(db,'quiz'), { status:'waiting', startedAt: Date.now() });
+  document.getElementById('quizCtrlStart').style.display = 'none';
+  document.getElementById('quizCtrlStop').style.display = 'block';
+
+  setTimeout(() => runNextQuestion(shuffled, 0), 3000);
+};
+
+async function runNextQuestion(questions, idx) {
+  if (idx >= 5) {
+    await set(ref(db,'quiz/status'), 'finished');
+    setTimeout(async () => {
+      await remove(ref(db,'quiz'));
+      document.getElementById('quizCtrlStart').style.display = 'block';
+      document.getElementById('quizCtrlStop').style.display = 'none';
+    }, 6000);
+    return;
+  }
+  // 답변 초기화
+  await set(ref(db,'quiz'), {
+    status: 'question',
+    qIdx: idx,
+    currentQ: questions[idx],
+    answers: {},
+    startedAt: Date.now()
+  });
+
+  // 6초 후 정답 공개
+  setTimeout(async () => {
+    const snap = await get(ref(db,'quiz/answers'));
+    const answers = snap.val() || {};
+    await set(ref(db,'quiz'), {
+      status: 'reveal',
+      qIdx: idx,
+      currentQ: questions[idx],
+      answers,
+      startedAt: Date.now()
+    });
+    // 4초 후 다음 문제
+    setTimeout(() => runNextQuestion(questions, idx+1), 4000);
+  }, 6000);
+}
+
+window.stopQuiz = async function() {
+  await remove(ref(db,'quiz'));
+  document.getElementById('quizCtrlStart').style.display = 'block';
+  document.getElementById('quizCtrlStop').style.display = 'none';
+  document.getElementById('quizMasterCtrl').style.display = 'none';
+  closeQuizOverlay();
+};
+
+// ── 채팅 1시간 자동 초기화 ──
+async function cleanOldChats() {
+  const snap = await get(ref(db,'chat'));
+  const data = snap.val();
+  if (!data) return;
+  const oneHourAgo = Date.now() - 60*60*1000;
+  const updates = {};
+  Object.entries(data).forEach(([k,v]) => {
+    if (v.t && v.t < oneHourAgo) updates[k] = null;
+  });
+  if (Object.keys(updates).length > 0) {
+    const { update } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    update(ref(db,'chat'), updates);
+  }
+}
+// 입장 시 + 30분마다 채팅 정리
+setTimeout(cleanOldChats, 5000);
+setInterval(cleanOldChats, 30*60*1000);
+
+</script>
+</body>
+</html>
