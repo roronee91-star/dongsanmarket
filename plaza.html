@@ -12,7 +12,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 
 .bg { position: fixed; inset: 0; z-index: 0; background-size: cover; background-position: center; background-repeat: no-repeat; }
 
-/* 플레이어 */
 .player { position: fixed; z-index: 20; display: flex; flex-direction: column; align-items: center; pointer-events: none; transform: translate(-50%, -100%); }
 .player-sprite { width: clamp(45px, 6vw, 80px); height: clamp(60px, 8vw, 105px); object-fit: contain; }
 .player-shadow { width: clamp(28px, 4vw, 52px); height: clamp(5px, 0.7vw, 9px); background: rgba(0,0,0,0.22); border-radius: 50%; margin-top: -4px; }
@@ -21,7 +20,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .player-bubble::after { content:''; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:#58c858; }
 .my-player .player-sprite { filter: drop-shadow(0 0 7px #FFD700); }
 
-/* 상단 바 */
 .top-bar { position: fixed; top:0; left:0; right:0; z-index:50; background: rgba(0,20,60,0.82); padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #58c858; }
 .back-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .top-title { color: #FFD700; font-size: 14px; font-weight: 900; }
@@ -29,19 +27,16 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .online-badge { background: #58c858; color: white; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px; }
 .exit-btn { background: rgba(220,50,50,0.85); border: 1px solid rgba(255,100,100,0.5); color: white; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
 
-/* 접속자 */
 .users-panel { position: fixed; top:48px; left:8px; z-index:40; background: rgba(0,20,60,0.78); border: 1px solid #58c858; border-radius: 10px; padding: 7px 9px; min-width: 80px; max-width: 110px; }
 .users-title { font-size: 9px; color: #58c858; font-weight: 700; margin-bottom: 5px; }
 .user-item { font-size: 10px; color: #eee; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
 .user-dot { width: 6px; height: 6px; background: #58c858; border-radius: 50%; flex-shrink: 0; }
 
-/* 조이스틱 */
 .joystick { position: fixed; left:10px; bottom:14px; z-index:50; width: 96px; height: 96px; display: grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr 1fr; gap:3px; }
 .jbtn { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.25); border-radius: 7px; color: white; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; }
 .jbtn.pressed { background: rgba(88,200,88,0.6); }
 .jcenter { background: rgba(255,255,255,0.08); border-radius: 50%; }
 
-/* 채팅 */
 .chat-panel { position: fixed; top:50px; right:8px; z-index:50; width: min(360px, 32vw, calc(100vw - 110px)); }
 .chat-box { background: rgba(0,20,60,0.82); border: 2px solid #58c858; border-radius: 10px 10px 0 0; padding: 8px; height: clamp(100px, 18vh, 160px); overflow-y: scroll; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; }
 .chat-box::-webkit-scrollbar { width: 4px; }
@@ -55,7 +50,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .chat-input::placeholder { color:#445; }
 .chat-send { background:#58c858; border:none; color:white; font-size:12px; font-weight:700; padding:0 12px; cursor:pointer; flex-shrink:0; }
 
-/* 모달 공통 */
 .modal-bg { position: fixed; inset:0; background: rgba(0,0,0,0.78); z-index:200; display:flex; align-items:center; justify-content:center; }
 .modal { background: #fff; border: 3px solid #58c858; border-radius: 20px; padding: 22px; width: min(380px, 95vw); box-shadow: 0 8px 30px rgba(0,0,0,0.35); max-height: 92vh; overflow-y: auto; }
 .modal-title { font-size:17px; font-weight:900; color:#206820; text-align:center; margin-bottom:4px; }
@@ -63,17 +57,9 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .name-input { width:100%; padding:11px; border:2px solid #c8e6c9; border-radius:10px; font-size:14px; font-family:inherit; background:#f9fff9; outline:none; margin-bottom:12px; text-align:center; }
 .name-input:focus { border-color:#58c858; }
 .char-section-title { font-size:11px; font-weight:700; color:#388e3c; margin-bottom:8px; }
-.char-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
-.char-grid .char-opt:nth-child(4),
-.char-grid .char-opt:nth-child(5),
-.char-grid .char-opt:nth-child(6),
-.char-grid .char-opt:nth-child(7) { grid-column: auto; }
-/* 4번째부터 4열로 */
 .char-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; justify-content:center; }
-.char-opt { width: calc(33% - 6px); border:2px solid #e0e0e0; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafff9; transition:all 0.15s; padding:6px 4px; }
+.char-opt { border:2px solid #e0e0e0; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafff9; transition:all 0.15s; padding:6px 4px; width: calc(33% - 6px); }
 .char-opt.wide { width: calc(25% - 6px); }
-
-.char-opt { border:2px solid #e0e0e0; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafff9; transition:all 0.15s; padding:6px 4px; }
 .char-opt.pastor-only { border-color:#FFD700; background:#fffbf0; }
 .char-opt.pastor-only.locked { opacity:0.4; cursor:not-allowed; }
 .char-opt span { font-size:9px; color:#555; margin-top:4px; font-weight:600; text-align:center; }
@@ -82,14 +68,12 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .enter-btn { width:100%; padding:13px; background:linear-gradient(180deg,#66bb6a,#43a047); border:none; border-radius:12px; color:white; font-size:15px; font-weight:900; font-family:inherit; cursor:pointer; box-shadow:0 4px 0 #2e7d32; }
 .enter-btn:disabled { opacity:0.4; cursor:not-allowed; }
 
-/* 미니게임 모달 */
 .game-modal { background: #1a1a2e; border: 3px solid #FFD700; border-radius: 20px; padding: 24px; width: min(420px, 95vw); box-shadow: 0 8px 30px rgba(0,0,0,0.5); max-height: 92vh; overflow-y: auto; }
 .game-title { font-size:18px; font-weight:900; color:#FFD700; text-align:center; margin-bottom:6px; }
 .game-sub { font-size:11px; color:#aaa; text-align:center; margin-bottom:16px; }
 .verse-box { background: #0d0d1a; border: 2px solid #FFD700; border-radius: 12px; padding: 16px; margin-bottom:14px; }
 .verse-ref { font-size:12px; color:#FFD700; font-weight:700; margin-bottom:8px; }
 .verse-text { font-size:15px; color:white; line-height:1.8; font-weight:500; letter-spacing:0.3px; }
-.verse-text.highlight { color: #FFD700; }
 .game-input-area { display:none; margin-bottom:14px; }
 .game-input { width:100%; padding:12px; background:#0d0d1a; border:2px solid #58c858; border-radius:10px; color:white; font-size:14px; font-family:inherit; outline:none; line-height:1.6; resize:none; }
 .timer-display { font-size:28px; font-weight:900; color:#58c858; text-align:center; margin-bottom:12px; font-family:monospace; }
@@ -108,7 +92,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .result-time { font-size:36px; font-weight:900; color:#58c858; font-family:monospace; }
 .result-label { font-size:12px; color:#aaa; margin-top:4px; }
 
-/* 게임 참여 팝업 */
 .popup { background: #1a2a1a; border: 3px solid #58c858; border-radius: 16px; padding: 20px; width: min(300px, 90vw); text-align:center; }
 .popup-title { font-size:16px; font-weight:900; color:#FFD700; margin-bottom:8px; }
 .popup-sub { font-size:12px; color:#aaa; margin-bottom:16px; line-height:1.6; }
@@ -117,7 +100,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .popup-btn-yes { background:#58c858; color:white; }
 .popup-btn-no { background:rgba(255,255,255,0.1); color:#aaa; border:1px solid #444; }
 
-/* 게임 버튼 */
 .game-float-btn {
   position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
   z-index: 50; background: linear-gradient(180deg, #4a90d9, #2060b0);
@@ -125,7 +107,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   font-size: 13px; font-weight: 900; font-family: inherit;
   cursor: pointer; box-shadow: 0 3px 0 #1a4080; display: none; white-space: nowrap;
 }
-/* 퀴즈 버튼 (목사님 전용) */
 .quiz-float-btn {
   position: fixed; right: 14px; bottom: 20px; z-index: 50;
   background: linear-gradient(180deg, #e04040, #b02020);
@@ -133,7 +114,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   font-size: 13px; font-weight: 900; font-family: inherit;
   cursor: pointer; box-shadow: 0 3px 0 #801010; display: none; white-space: nowrap;
 }
-/* 퀴즈 전체 오버레이 */
 .quiz-overlay {
   position: fixed; inset: 0; z-index: 100;
   background: rgba(0,0,0,0.92);
@@ -143,7 +123,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   animation: fadeIn 0.3s ease;
 }
 @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-/* 퀴즈 카드 */
 .quiz-card {
   width: min(480px, 95vw); background: #fffef0;
   border: 4px solid #8B6914; border-radius: 20px;
@@ -172,7 +151,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   font-size: 14px; font-weight: 900; color: #8B6914;
   text-align: center; margin-bottom: 16px; font-family: monospace;
 }
-/* 입력 */
 .quiz-input-row { display: flex; gap: 8px; margin-bottom: 4px; }
 .quiz-input {
   flex: 1; padding: 12px; border: 3px solid #8B6914;
@@ -185,7 +163,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   border-radius: 12px; color: white; font-size: 14px;
   font-weight: 900; font-family: inherit; cursor: pointer;
 }
-/* OX */
 .quiz-ox-row { display: flex; gap: 12px; margin-bottom: 4px; }
 .quiz-ox-btn {
   flex: 1; padding: 16px; border: 3px solid #ddd;
@@ -194,7 +171,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 }
 .quiz-ox-btn.sel-o { border-color: #58c858; background: #e8f5e9; }
 .quiz-ox-btn.sel-x { border-color: #e04040; background: #ffeaea; }
-/* 4지선다 */
 .quiz-choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
 .quiz-choice-btn {
   padding: 12px 8px; border: 2px solid #8B6914;
@@ -203,7 +179,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   font-family: inherit; transition: all 0.15s;
 }
 .quiz-choice-btn.selected { border-color: #e04040; background: #ffeaea; }
-/* 정답 공개 */
 .quiz-reveal {
   background: #e8f5e9; border: 3px solid #58c858;
   border-radius: 14px; padding: 16px; text-align: center;
@@ -214,13 +189,9 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .quiz-reveal-me { font-size: 15px; font-weight: 700; }
 .quiz-reveal-me.correct { color: #388e3c; }
 .quiz-reveal-me.wrong { color: #e04040; }
-/* 대기 화면 */
-.quiz-waiting {
-  text-align: center; padding: 20px 0;
-}
+.quiz-waiting { text-align: center; padding: 20px 0; }
 .quiz-waiting-title { font-size: 22px; font-weight: 900; color: #3a2000; margin-bottom: 8px; }
 .quiz-waiting-sub { font-size: 13px; color: #888; }
-/* 결과 화면 */
 .quiz-result-card {
   width: min(420px, 95vw); background: #fffef0;
   border: 4px solid #8B6914; border-radius: 20px;
@@ -292,7 +263,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   <div></div>
 </div>
 
-<!-- 게임 버튼 (입장 후 표시) -->
 <button class="game-float-btn" id="gameFloatBtn" onclick="showGamePopup()">📖 말씀 타자 게임</button>
 
 <div class="chat-panel">
@@ -305,40 +275,33 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 
 <!-- 퀴즈 오버레이 -->
 <div class="quiz-overlay" id="quizOverlay">
-  <!-- 대기 화면 -->
   <div class="quiz-card" id="quizWaitCard">
     <div class="quiz-waiting">
       <div class="quiz-waiting-title">📖 성경 퀴즈 대회</div>
       <div class="quiz-waiting-sub">잠시 후 퀴즈가 시작됩니다!<br>준비해주세요 😊</div>
     </div>
   </div>
-  <!-- 문제 화면 -->
   <div class="quiz-card" id="quizQCard" style="display:none">
     <div class="quiz-badge" id="quizBadge">문제 1/5</div>
     <div class="quiz-question" id="quizQuestion"></div>
     <div class="quiz-timer-bar-wrap"><div class="quiz-timer-bar" id="quizTimerBar"></div></div>
     <div class="quiz-timer-text" id="quizTimerText">5초</div>
-    <!-- 빈칸/단답 -->
     <div class="quiz-input-row" id="quizInputRow" style="display:none">
       <input class="quiz-input" id="quizInput" placeholder="답 입력..." maxlength="20"
         onkeydown="if(event.key==='Enter'){event.preventDefault();submitQuizAns();}">
       <button class="quiz-submit-btn" onclick="submitQuizAns()">제출</button>
     </div>
-    <!-- OX -->
     <div class="quiz-ox-row" id="quizOxRow" style="display:none">
       <button class="quiz-ox-btn" id="quizOX_O" onclick="pickOX('O')">⭕</button>
       <button class="quiz-ox-btn" id="quizOX_X" onclick="pickOX('X')">❌</button>
     </div>
-    <!-- 4지선다 -->
     <div class="quiz-choices-grid" id="quizChoicesGrid" style="display:none"></div>
-    <!-- 정답 공개 -->
     <div class="quiz-reveal" id="quizReveal">
       <div class="quiz-reveal-label">✅ 정답</div>
       <div class="quiz-reveal-answer" id="quizRevealAnswer"></div>
       <div class="quiz-reveal-me" id="quizRevealMe"></div>
     </div>
   </div>
-  <!-- 결과 화면 -->
   <div class="quiz-result-card" id="quizResultCard" style="display:none">
     <div class="quiz-result-title">🏆 퀴즈 끝!</div>
     <div class="quiz-result-score" id="quizResultScore">0</div>
@@ -355,7 +318,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
   <button class="quiz-ctrl-btn quiz-ctrl-stop" id="quizCtrlStop" style="display:none" onclick="stopQuiz()">■ 퀴즈 종료</button>
 </div>
 
-<!-- 퀴즈 버튼 (목사님 전용) -->
 <button class="quiz-float-btn" id="quizFloatBtn" onclick="toggleQuizCtrl()">📋 퀴즈 관리</button>
 
 <!-- 캐릭터 선택 모달 -->
@@ -410,7 +372,7 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getDatabase, ref, set, get, remove, onValue, onDisconnect, push, query, limitToLast, orderByChild } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import { getDatabase, ref, set, get, remove, onValue, onDisconnect, push, query, limitToLast, orderByChild, update } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 const firebaseConfig = {
   apiKey: "AIzaSyD3YZHM-GRqEQDQIR9shFQ7bZMhsBjB-NQ",
@@ -438,15 +400,12 @@ applyBackground();
 setInterval(applyBackground, 60000);
 window.addEventListener('resize', applyBackground);
 
-// ── 목사님 여부 체크 (index.html에서 명시적으로 설정한 경우만) ──
 const isPastor = sessionStorage.getItem('isPastor') === 'true';
 
-// ── 세션 저장 ──
 const SESSION_KEY = 'plaza_session';
 function saveSession(name, charId) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({name, charId})); }
 function loadSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
-// ── 캐릭터 목록 ──
 const CHARS = [
   {id:'char1', img:'char1.png', n:'기본청년'},
   {id:'char2', img:'char2.png', n:'안경청년'},
@@ -462,7 +421,6 @@ const charGridEl = document.getElementById('charGrid');
 CHARS.forEach((c, idx) => {
   const d = document.createElement('div');
   const locked = c.pastorOnly && !isPastor;
-  // 1~3번: 3열, 4~7번: 4열(wide 클래스)
   d.className = 'char-opt' + (idx >= 3 ? ' wide' : '') + (c.pastorOnly?' pastor-only':'') + (locked?' locked':'');
   d.innerHTML = `<img src="${c.img}" style="width:48px;height:62px;object-fit:contain"><span>${c.n}${c.pastorOnly?'<br>👑':''}${locked?'<br>🔒':''}</span>`;
   if (!locked) {
@@ -489,11 +447,10 @@ function checkReady() {
 if (prev && prev.name && prev.charId) {
   const foundChar = CHARS.find(c => c.id === prev.charId && !(c.pastorOnly && !isPastor));
   if (foundChar) {
-    // 모달 즉시 숨기고 토스트 표시
     document.getElementById('modal').style.display = 'none';
     const toast = document.createElement('div');
     toast.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,20,60,0.92);color:white;padding:16px 24px;border-radius:16px;border:2px solid #58c858;font-size:14px;font-weight:700;z-index:9999;text-align:center;`;
-    toast.innerHTML = `${foundChar.img ? `<img src="${foundChar.img}" style="width:50px;height:65px;object-fit:contain;display:block;margin:0 auto 8px">` : ''}${prev.name}님으로 입장 중...`;
+    toast.innerHTML = `<img src="${foundChar.img}" style="width:50px;height:65px;object-fit:contain;display:block;margin:0 auto 8px">${prev.name}님으로 입장 중...`;
     document.body.appendChild(toast);
     selChar = foundChar;
     setTimeout(() => {
@@ -503,7 +460,6 @@ if (prev && prev.name && prev.charId) {
   }
 }
 
-// ── 플레이어 상태 ──
 const myId = 'u_'+Date.now()+'_'+Math.random().toString(36).slice(2,5);
 let myX, myY, myName='', myImg='';
 const bubbleTimers = {};
@@ -513,16 +469,13 @@ let W = window.innerWidth, H = window.innerHeight;
 let myRef = null;
 window.addEventListener('resize', ()=>{W=window.innerWidth;H=window.innerHeight;});
 
-// ── 마켓으로 (세션 유지) ──
 window.goBackToMarket = function() {
-  // Firebase에서 캐릭터 제거하지 않고 세션 유지한 채 이동
   if (myRef) remove(myRef);
   window.location.href = 'index.html';
 };
 
-// ── 나가기 (세션 초기화) ──
 window.leavePlaza = async function() {
-  sessionStorage.removeItem(SESSION_KEY); // 명시적 나가기 시 세션 초기화
+  sessionStorage.removeItem(SESSION_KEY);
   if (myRef) {
     await push(ref(db,'chat'), {system:true, text:`👤 ${myName}님이 퇴장했어요.`, t:Date.now()});
     await remove(myRef);
@@ -553,13 +506,12 @@ let lastPosUpdate = 0;
 function updateMyPos() {
   renderPlayer(myId, myName, myImg, myX, myY, true);
   const now = Date.now();
-  if (now - lastPosUpdate > 100) { // 100ms마다만 Firebase 업데이트
+  if (now - lastPosUpdate > 100) {
     lastPosUpdate = now;
     if (myRef) set(myRef, {name:myName, emoji:myImg, x:myX/W, y:myY/H, t:now});
   }
 }
 
-// ── 조이스틱 ──
 ['Up','Down','Left','Right'].forEach(dir => {
   const btn = document.getElementById('j'+dir);
   const d = dir.toLowerCase();
@@ -596,8 +548,6 @@ setInterval(()=>{
   if(moved) updateMyPos();
 },16);
 
-// ── 게시판 클릭 감지 (배경 우측 게시판 영역) ──
-// ── 게임 버튼 클릭 ──
 window.showGamePopup = function() {
   if (!myName) return;
   const todayKey = getTodayKey();
@@ -631,15 +581,13 @@ window.enterPlaza = async function() {
   set(myRef, {name:myName, emoji:myImg, x:myX/W, y:myY/H, t:Date.now()});
   onDisconnect(myRef).remove();
 
-  // heartbeat: 30초마다 t 갱신 (20초→30초로 줄임)
   setInterval(()=>{
     if(myRef&&myName) set(myRef,{name:myName,emoji:myImg,x:myX/W,y:myY/H,t:Date.now()});
   },30000);
 
-  // plaza 리스너 (throttle 적용 - 500ms마다만 렌더)
   let plazaRenderTimer = null;
   onValue(ref(db,'plaza'), snap=>{
-    if (plazaRenderTimer) return; // throttle
+    if (plazaRenderTimer) return;
     plazaRenderTimer = setTimeout(()=>{
       plazaRenderTimer = null;
       const data=snap.val()||{};
@@ -693,21 +641,17 @@ window.enterPlaza = async function() {
 
   push(ref(db,'chat'),{system:true,text:`👤 ${myName}님이 입장했어요!`,t:Date.now()});
   renderPlayer(myId,myName,myImg,myX,myY,true);
-  // 게임 랭킹은 게임 열 때만 로드 (자동 로드 제거)
 
-  // 게임 버튼 표시
   document.getElementById('gameFloatBtn').style.display = 'block';
 
-  // 목사님이면 퀴즈 버튼 표시
   if (isPastor) {
     document.getElementById('quizFloatBtn').style.display = 'block';
   }
 
-  // 퀴즈 리스너 시작
+  // ✅ 퀴즈 리스너 시작 (입장 완료 후 확실히 호출)
   initQuizListener();
 };
 
-// ── 채팅 ──
 window.sendChat = function() {
   const input=document.getElementById('chatInput');
   const text=input.value.trim();
@@ -727,8 +671,6 @@ window.sendChat = function() {
 // ══════════════════════════════════
 // ── 미니게임 ──
 // ══════════════════════════════════
-
-// 오늘의 말씀 목록 (날짜 기준으로 자동 선택)
 const VERSES = [
   {ref:'요한복음 3:16', text:'하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니 이는 그를 믿는 자마다 멸망하지 않고 영생을 얻게 하려 하심이라'},
   {ref:'빌립보서 4:13', text:'내게 능력 주시는 자 안에서 내가 모든 것을 할 수 있느니라'},
@@ -751,7 +693,6 @@ function getTodayKey() {
   const korea = new Date(now.getTime() + 9*60*60*1000);
   return `${korea.getUTCFullYear()}-${String(korea.getUTCMonth()+1).padStart(2,'0')}-${String(korea.getUTCDate()).padStart(2,'0')}`;
 }
-
 function getTodayVerse() {
   const key = getTodayKey();
   const dayNum = parseInt(key.replace(/-/g,''));
@@ -786,12 +727,9 @@ window.startGame = function() {
   const gameInputEl = document.getElementById('gameInput');
   gameInputEl.value = '';
   gameInputEl.focus();
-
-  // 복붙 차단
   gameInputEl.addEventListener('paste', e=>{ e.preventDefault(); alert('붙여넣기는 사용할 수 없어요! 직접 타이핑해주세요 😊'); });
   gameInputEl.addEventListener('drop', e=>{ e.preventDefault(); });
   gameInputEl.addEventListener('contextmenu', e=>{ e.preventDefault(); });
-
   gameStartTime = Date.now();
   gameTimer = setInterval(()=>{
     const elapsed = (Date.now()-gameStartTime)/1000;
@@ -803,18 +741,13 @@ window.submitGame = async function() {
   if (!gameStartTime || gameFinished) return;
   const input = document.getElementById('gameInput').value;
   const verse = getTodayVerse();
-
-  // 검증: 입력값이 원문과 80% 이상 일치해야 제출 가능
   const normalize = s => s.replace(/\s+/g,' ').trim();
   const inputNorm = normalize(input);
   const verseNorm = normalize(verse.text);
-
-  // 유사도 체크 (글자 단위)
   const minLen = Math.min(inputNorm.length, verseNorm.length);
   let match = 0;
   for (let i=0; i<minLen; i++) { if(inputNorm[i]===verseNorm[i]) match++; }
   const similarity = minLen > 0 ? match/verseNorm.length : 0;
-
   if (inputNorm.length < verseNorm.length * 0.8) {
     alert(`아직 완성되지 않았어요!\n말씀을 끝까지 입력해야 제출할 수 있어요 📖`);
     return;
@@ -825,19 +758,15 @@ window.submitGame = async function() {
     document.getElementById('gameInput').focus();
     return;
   }
-
   gameFinished = true;
   clearInterval(gameTimer);
   const elapsed = (Date.now()-gameStartTime)/1000;
-
   document.getElementById('gameInputArea').style.display = 'none';
   document.getElementById('resultBox').style.display = 'block';
   document.getElementById('resultTime').textContent = elapsed.toFixed(2)+'초';
   document.getElementById('resultBox').innerHTML += `<div style="font-size:11px;color:#58c858;margin-top:6px">정확도 ${Math.round(similarity*100)}%</div>`;
-
   const todayKey = getTodayKey();
   localStorage.setItem(`game_played_${myName}_${todayKey}`, '1');
-
   await set(ref(db,`game/${todayKey}/${myName.replace(/[.#$/[\]]/g,'_')}`), {
     name: myName, time: elapsed, accuracy: Math.round(similarity*100), t: Date.now()
   });
@@ -872,9 +801,8 @@ window.closeGame = function() {
 };
 
 // ══════════════════════════════════
-// ── 성경 퀴즈 시스템 (재설계) ──
+// ── 성경 퀴즈 시스템 ──
 // ══════════════════════════════════
-
 const QUIZ_BANK = [
   {type:'ox', q:'다윗은 골리앗을 물매돌로 쓰러뜨렸다', a:'O'},
   {type:'ox', q:'노아의 방주에는 동물이 암수 각 2마리씩 탔다', a:'O'},
@@ -902,7 +830,6 @@ const QUIZ_BANK = [
   {type:'short', q:'오병이어 기적에서 사용된 빵의 수는? (숫자)', a:'5'},
 ];
 
-// 퀴즈 상태
 let quizState = {
   active: false,
   qIdx: 0,
@@ -913,6 +840,7 @@ let quizState = {
   history: [],
   timerInterval: null,
   listenerUnsubscribe: null,
+  lastHandledStatus: null, // ✅ 중복 처리 방지용
 };
 
 function resetQuizState() {
@@ -923,18 +851,23 @@ function resetQuizState() {
     score: 0, history: [],
     timerInterval: null,
     listenerUnsubscribe: quizState.listenerUnsubscribe,
+    lastHandledStatus: null,
   };
 }
 
-// Firebase 퀴즈 리스너 (한 번만 등록)
+// ✅ 버그1 수정: initQuizListener를 enterPlaza 내부에서만 호출, 중복 등록 완전 차단
 function initQuizListener() {
-  if (quizState.listenerUnsubscribe) return; // 중복 방지
+  if (quizState.listenerUnsubscribe) return;
   quizState.listenerUnsubscribe = onValue(ref(db, 'quiz'), snap => {
     const data = snap.val();
     if (!data || !data.status) {
       if (quizState.active) closeQuizOverlay();
       return;
     }
+    // ✅ 버그2 수정: status+qIdx 조합으로 중복 처리 방지
+    const stateKey = `${data.status}_${data.qIdx ?? 0}`;
+    if (stateKey === quizState.lastHandledStatus) return;
+    quizState.lastHandledStatus = stateKey;
     handleQuizState(data);
   });
 }
@@ -948,8 +881,6 @@ function handleQuizState(data) {
   } else if (data.status === 'question') {
     const q = data.currentQ;
     const idx = data.qIdx || 0;
-    // 같은 문제면 다시 렌더 안함
-    if (quizState.active && quizState.qIdx === idx && quizState.answered) return;
     quizState.active = true;
     quizState.qIdx = idx;
     quizState.answered = false;
@@ -973,11 +904,12 @@ function showQuizQuestion(q, idx, startedAt) {
   document.getElementById('quizQCard').style.display = 'block';
   document.getElementById('quizResultCard').style.display = 'none';
   document.getElementById('quizReveal').style.display = 'none';
+  document.getElementById('quizTimerText').style.display = 'block';
+  document.getElementById('quizTimerBar').parentElement.style.display = 'block';
 
   document.getElementById('quizBadge').textContent = `문제 ${idx+1} / 5`;
   document.getElementById('quizQuestion').textContent = q.q;
 
-  // 입력 초기화
   document.getElementById('quizInputRow').style.display = 'none';
   document.getElementById('quizOxRow').style.display = 'none';
   document.getElementById('quizChoicesGrid').style.display = 'none';
@@ -994,11 +926,10 @@ function showQuizQuestion(q, idx, startedAt) {
     const grid = document.getElementById('quizChoicesGrid');
     grid.style.display = 'grid';
     grid.innerHTML = q.choices.map(c =>
-      `<button class="quiz-choice-btn" onclick="pickChoice('${c.replace(/'/g,"\'")}' )">${c}</button>`
+      `<button class="quiz-choice-btn" onclick="pickChoice('${c.replace(/'/g,"\\'")}' )">${c}</button>`
     ).join('');
   }
 
-  // 타이머 (서버 startedAt 기준으로 남은 시간 계산)
   clearInterval(quizState.timerInterval);
   const elapsed = (Date.now() - (startedAt || Date.now())) / 1000;
   let timeLeft = Math.max(0, Math.ceil(5 - elapsed));
@@ -1032,6 +963,7 @@ function handleTimeout() {
 }
 
 function saveMyAnswer(ans) {
+  if (!myName) return;
   set(ref(db, `quiz/answers/${myName.replace(/[.#$\[\]]/g,'_')}`), ans);
 }
 
@@ -1084,7 +1016,6 @@ function showQuizReveal(q, answers) {
     myA: myAns, correct, isCorrect
   });
 
-  // 정답 공개
   document.getElementById('quizTimerText').style.display = 'none';
   document.getElementById('quizTimerBar').parentElement.style.display = 'none';
   document.getElementById('quizReveal').style.display = 'block';
@@ -1098,11 +1029,9 @@ function showQuizReveal(q, answers) {
     meEl.textContent = `❌ 오답 (내 답: ${myAns})`; meEl.className = 'quiz-reveal-me wrong';
   }
 
-  // 말풍선
   Object.entries(answers).forEach(([name, ans]) => {
     const isRight = ans.trim() === correct.trim();
-    const playerEls = document.querySelectorAll('.player');
-    playerEls.forEach(el => {
+    document.querySelectorAll('.player').forEach(el => {
       const nameEl = el.querySelector('.player-name');
       if (nameEl && nameEl.textContent.trim() === name.replace(/_/g,' ').trim()) {
         let b = el.querySelector('.player-bubble');
@@ -1132,7 +1061,6 @@ function showQuizFinalResult() {
     </div>
   `).join('');
 
-  // 데나리온 적립
   if (quizState.score > 0 && myName) {
     const GAS = 'https://script.google.com/macros/s/AKfycbxoVhMwEQuxXsQX_8GzzucY6LJggktnZW7SKfXXf23DGiJVzzdJb-1Za0zatedIbW6e/exec';
     const form = new FormData();
@@ -1155,11 +1083,11 @@ function closeQuizOverlay() {
 
 window.closeQuizResult = function() {
   closeQuizOverlay();
-  // Firebase 세션 초기화
   remove(ref(db,'quiz'));
 };
 
-// 목사님 컨트롤
+// ✅ 버그2 수정: 목사님 퀴즈 종료 - 진행 중인 타임아웃도 즉시 중단
+let quizTimeouts = [];
 window.toggleQuizCtrl = function() {
   const p = document.getElementById('quizMasterCtrl');
   p.style.display = p.style.display === 'flex' ? 'none' : 'flex';
@@ -1170,25 +1098,27 @@ window.startQuiz = async function() {
   quizState.questions = shuffled;
   quizState.score = 0;
   quizState.history = [];
+  quizTimeouts = []; // 타임아웃 목록 초기화
 
   await set(ref(db,'quiz'), { status:'waiting', startedAt: Date.now() });
   document.getElementById('quizCtrlStart').style.display = 'none';
   document.getElementById('quizCtrlStop').style.display = 'block';
 
-  setTimeout(() => runNextQuestion(shuffled, 0), 3000);
+  const t = setTimeout(() => runNextQuestion(shuffled, 0), 3000);
+  quizTimeouts.push(t);
 };
 
 async function runNextQuestion(questions, idx) {
   if (idx >= 5) {
     await set(ref(db,'quiz/status'), 'finished');
-    setTimeout(async () => {
+    const t = setTimeout(async () => {
       await remove(ref(db,'quiz'));
       document.getElementById('quizCtrlStart').style.display = 'block';
       document.getElementById('quizCtrlStop').style.display = 'none';
     }, 6000);
+    quizTimeouts.push(t);
     return;
   }
-  // 답변 초기화
   await set(ref(db,'quiz'), {
     status: 'question',
     qIdx: idx,
@@ -1197,8 +1127,7 @@ async function runNextQuestion(questions, idx) {
     startedAt: Date.now()
   });
 
-  // 6초 후 정답 공개
-  setTimeout(async () => {
+  const t1 = setTimeout(async () => {
     const snap = await get(ref(db,'quiz/answers'));
     const answers = snap.val() || {};
     await set(ref(db,'quiz'), {
@@ -1208,12 +1137,17 @@ async function runNextQuestion(questions, idx) {
       answers,
       startedAt: Date.now()
     });
-    // 4초 후 다음 문제
-    setTimeout(() => runNextQuestion(questions, idx+1), 4000);
+    const t2 = setTimeout(() => runNextQuestion(questions, idx+1), 4000);
+    quizTimeouts.push(t2);
   }, 6000);
+  quizTimeouts.push(t1);
 }
 
 window.stopQuiz = async function() {
+  // ✅ 진행 중인 모든 setTimeout 즉시 취소
+  quizTimeouts.forEach(t => clearTimeout(t));
+  quizTimeouts = [];
+
   await remove(ref(db,'quiz'));
   document.getElementById('quizCtrlStart').style.display = 'block';
   document.getElementById('quizCtrlStop').style.display = 'none';
@@ -1232,11 +1166,9 @@ async function cleanOldChats() {
     if (v.t && v.t < oneHourAgo) updates[k] = null;
   });
   if (Object.keys(updates).length > 0) {
-    const { update } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
     update(ref(db,'chat'), updates);
   }
 }
-// 입장 시 + 30분마다 채팅 정리
 setTimeout(cleanOldChats, 5000);
 setInterval(cleanOldChats, 30*60*1000);
 
