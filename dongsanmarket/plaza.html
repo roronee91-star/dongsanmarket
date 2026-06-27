@@ -664,8 +664,8 @@ window.enterPlaza = async function() {
         ?`<div class="chat-msg sys"><span class="ct">${m.text}</span></div>`
         :`<div class="chat-msg"><span class="cn">${m.name}</span> <span class="ct">${m.text}</span></div>`
     ).join('');
-    // 항상 최신 메시지로 스크롤
-    box.scrollTop = box.scrollHeight;
+    // DOM 렌더 후 스크롤
+    setTimeout(() => { box.scrollTop = box.scrollHeight; }, 50);
 
     const now2=Date.now();
     const newMsgs=msgs.filter(m=>!m.system&&m.t&&m.t>lastSeenT&&m.t>now2-10000);
