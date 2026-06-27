@@ -886,6 +886,8 @@ let quizState = {
   active: false, qIdx: 0, questions: [],
   myAnswer: null, answered: false,
   score: 0, history: [],
+  revealedIdx: -1,
+  resultShown: false,
   timerInterval: null, listenerUnsubscribe: null,
 };
 
@@ -895,6 +897,8 @@ function resetQuizState() {
     active: false, qIdx: 0, questions: [],
     myAnswer: null, answered: false,
     score: 0, history: [],
+    revealedIdx: -1,
+    resultShown: false,
     timerInterval: null,
     listenerUnsubscribe: quizState.listenerUnsubscribe,
   };
@@ -1054,6 +1058,11 @@ window.pickChoice = function(val) {
 
 function showQuizReveal(q, answers) {
   clearInterval(quizState.timerInterval);
+
+  // 이미 이 문제 reveal 처리했으면 스킵 (중복 방지)
+  if (quizState.revealedIdx === quizState.qIdx) return;
+  quizState.revealedIdx = quizState.qIdx;
+
   const correct = q.a;
   const myAns = quizState.myAnswer || '(미입력)';
   const normalize = s => s.replace(/\s+/g, '').trim();
@@ -1098,6 +1107,9 @@ function showQuizReveal(q, answers) {
 
 function showQuizFinalResult() {
   clearInterval(quizState.timerInterval);
+  // 이미 결과 표시했으면 스킵 (중복 방지)
+  if (quizState.resultShown) return;
+  quizState.resultShown = true;
   document.getElementById('quizTopCard').style.display = 'none';
   document.getElementById('quizResultModal').style.display = 'flex';
   document.getElementById('quizResultScore').textContent = quizState.score;
