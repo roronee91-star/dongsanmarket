@@ -49,8 +49,8 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .jcenter { background: rgba(255,255,255,0.06); border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); }
 
 /* 채팅 메시지 박스 - 우측 상단 */
-.chat-panel { position: fixed; top:48px; right:8px; z-index:50; width: min(320px, 38vw, calc(100vw - 16px)); }
-.chat-box { background: rgba(0,20,60,0.82); border: 2px solid #58c858; border-radius: 10px; padding: 8px; height: clamp(80px, 15vh, 140px); overflow-y: scroll; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; }
+.chat-panel { position: fixed; top:48px; right:8px; z-index:50; width: min(420px, 55vw, calc(100vw - 16px)); }
+.chat-box { background: rgba(0,20,60,0.82); border: 2px solid #58c858; border-radius: 10px; padding: 8px; height: clamp(160px, 30vh, 260px); overflow-y: scroll; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; }
 .chat-box::-webkit-scrollbar { width: 4px; }
 .chat-box::-webkit-scrollbar-thumb { background: #58c858; border-radius: 2px; }
 .chat-msg { font-size: 11px; line-height: 1.4; word-break: break-all; }
@@ -59,7 +59,7 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .chat-msg.sys .ct { color: #FFD700; font-style: italic; }
 
 /* 채팅 입력창 - 하단 고정 */
-.chat-input-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; display: flex; background: rgba(0,20,60,0.95); border-top: 2px solid #58c858; padding: 6px 10px; gap: 8px; align-items: center; }
+.chat-input-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; display: flex; background: rgba(0,20,60,0.95); border-top: 2px solid #58c858; padding: 6px 10px; gap: 8px; align-items: center; transition: bottom 0.15s; }
 .chat-input { flex:1; min-width:0; background: rgba(255,255,255,0.1); border: 1px solid #58c858; border-radius: 8px; color:white; font-size:13px; padding: 7px 10px; font-family:inherit; outline:none; }
 .chat-input::placeholder { color:#667; }
 .chat-send { background:#58c858; border:none; color:white; font-size:13px; font-weight:700; padding: 7px 14px; border-radius: 8px; cursor:pointer; flex-shrink:0; }
@@ -886,6 +886,8 @@ let quizState = {
   active: false, qIdx: 0, questions: [],
   myAnswer: null, answered: false,
   score: 0, history: [],
+  revealedIdx: -1,
+  resultShown: false,
   timerInterval: null, listenerUnsubscribe: null,
 };
 
@@ -895,6 +897,8 @@ function resetQuizState() {
     active: false, qIdx: 0, questions: [],
     myAnswer: null, answered: false,
     score: 0, history: [],
+    revealedIdx: -1,
+    resultShown: false,
     timerInterval: null,
     listenerUnsubscribe: quizState.listenerUnsubscribe,
   };
@@ -1054,6 +1058,11 @@ window.pickChoice = function(val) {
 
 function showQuizReveal(q, answers) {
   clearInterval(quizState.timerInterval);
+
+  // 이미 이 문제 reveal 처리했으면 스킵 (중복 방지)
+  if (quizState.revealedIdx === quizState.qIdx) return;
+  quizState.revealedIdx = quizState.qIdx;
+
   const correct = q.a;
   const myAns = quizState.myAnswer || '(미입력)';
   const normalize = s => s.replace(/\s+/g, '').trim();
@@ -1098,6 +1107,9 @@ function showQuizReveal(q, answers) {
 
 function showQuizFinalResult() {
   clearInterval(quizState.timerInterval);
+  // 이미 결과 표시했으면 스킵 (중복 방지)
+  if (quizState.resultShown) return;
+  quizState.resultShown = true;
   document.getElementById('quizTopCard').style.display = 'none';
   document.getElementById('quizResultModal').style.display = 'flex';
   document.getElementById('quizResultScore').textContent = quizState.score;
@@ -1198,6 +1210,16 @@ window.stopQuiz = async function() {
   document.getElementById('quizMasterCtrl').style.display = 'none';
   closeQuizUI();
 };
+
+// ── 키보드 올라올 때 채팅 입력창 위치 조정 ──
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const bar = document.getElementById('chatInputBar');
+    if (!bar) return;
+    const keyboardHeight = window.innerHeight - window.visualViewport.height;
+    bar.style.bottom = keyboardHeight > 0 ? keyboardHeight + 'px' : '0px';
+  });
+}
 
 // ── 채팅 1시간 자동 초기화 ──
 async function cleanOldChats() {
