@@ -694,6 +694,9 @@ window.enterPlaza = async function() {
   document.getElementById('gameFloatBtn').style.display = 'block';
   if (isPastor) document.getElementById('quizFloatBtn').style.display = 'block';
 
+  // 입장 시 잔여 quiz 데이터 초기화 (목사님만)
+  if (isPastor) await remove(ref(db,'quiz'));
+
   initQuizListener();
 };
 
