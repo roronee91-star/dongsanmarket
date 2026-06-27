@@ -135,6 +135,9 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .quiz-top-card {
   position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
   z-index: 80; width: min(460px, 96vw);
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: none;
 }
 .quiz-card {
