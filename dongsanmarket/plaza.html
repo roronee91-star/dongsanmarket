@@ -135,7 +135,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .quiz-top-card {
   position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
   z-index: 80; width: min(460px, 96vw);
-  max-height: calc(100vh - 60px); overflow-y: auto;
   display: none;
 }
 .quiz-card {
@@ -958,7 +957,7 @@ function showQuizQuestion(q, idx, startedAt) {
   document.getElementById('quizInput').disabled = false;
   // 제출 버튼 초기화
   const qsb1 = document.getElementById('quizSubmitBtn');
-  if (qsb1) { qsb1.textContent = '제출'; submitBtn1.style.background = '#e04040'; }
+  if (qsb1) { qsb1.textContent = '제출'; qsb1.style.background = '#e04040'; }
   document.getElementById('quizTimerText').style.display = '';
   document.getElementById('quizTimerBar').parentElement.style.display = '';
   document.querySelectorAll('.quiz-ox-btn').forEach(b => b.className = 'quiz-ox-btn');
