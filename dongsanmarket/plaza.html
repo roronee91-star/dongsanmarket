@@ -534,7 +534,10 @@ window.leavePlaza = async function() {
   }
   window.location.href = 'index.html';
 };
-window.addEventListener('beforeunload', ()=>{ if(myRef) remove(myRef); });
+window.addEventListener('beforeunload', ()=>{ 
+  if(myRef) remove(myRef);
+  if(isPastor) remove(ref(db,'quiz'));
+});
 
 function renderPlayer(id, name, emoji, x, y, isMe) {
   let el = document.getElementById('pl_'+id);
