@@ -977,11 +977,11 @@ function showQuizQuestion(q, idx, startedAt) {
 
   clearInterval(quizState.timerInterval);
   const elapsed = (Date.now() - (startedAt || Date.now())) / 1000;
-  let timeLeft = Math.max(0, Math.ceil(10 - elapsed));
+  let timeLeft = Math.max(0, Math.ceil(7 - elapsed));
 
   const bar = document.getElementById('quizTimerBar');
   const txt = document.getElementById('quizTimerText');
-  bar.style.width = (timeLeft / 10 * 100) + '%';
+  bar.style.width = (timeLeft / 7 * 100) + '%';
   bar.className = 'quiz-timer-bar' + (timeLeft <= 3 ? ' warning' : '');
   txt.textContent = timeLeft + '초';
 
@@ -989,7 +989,7 @@ function showQuizQuestion(q, idx, startedAt) {
 
   quizState.timerInterval = setInterval(() => {
     timeLeft--;
-    bar.style.width = (timeLeft / 10 * 100) + '%';
+    bar.style.width = (timeLeft / 7 * 100) + '%';
     bar.className = 'quiz-timer-bar' + (timeLeft <= 3 ? ' warning' : '');
     txt.textContent = timeLeft + '초';
     if (timeLeft <= 0) {
@@ -1006,10 +1006,9 @@ function handleTimeout() {
   const inputVal = document.getElementById('quizInput').value.trim();
   const currentVal = quizState.myAnswer || inputVal || '(미입력)';
   quizState.myAnswer = currentVal;
-  document.getElementById('quizTimerText').textContent = currentVal === '(미입력)' ? '⏰ 시간초과!' : '제출완료!';
   document.getElementById('quizInput').disabled = true;
   const btn = document.getElementById('quizSubmitBtn');
-  if (btn) { btn.textContent = currentVal === '(미입력)' ? '⏰' : '✅'; btn.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
+  if (btn) { btn.textContent = currentVal === '(미입력)' ? '⏰' : '✅ 완료!'; btn.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
   showQuizBubble(myName, currentVal === '(미입력)' ? '⏰' : currentVal, currentVal === '(미입력)' ? 'wrong' : 'pending');
   saveMyAnswer(currentVal);
 }
@@ -1029,9 +1028,10 @@ window.submitQuizAns = function() {
   const btn = document.getElementById('quizSubmitBtn');
   btn.textContent = '✅ 완료!';
   btn.style.background = '#58c858';
-  document.getElementById('quizTimerText').textContent = '제출완료!';
-  document.getElementById('quizTimerBar').style.width = '100%';
-  document.getElementById('quizTimerBar').className = 'quiz-timer-bar';
+  // 타이머는 계속 카운트다운 유지, 버튼만 완료로 변경
+  const btn = document.getElementById('quizSubmitBtn');
+  btn.textContent = '✅ 완료!';
+  btn.style.background = '#58c858';
   showQuizBubble(myName, val, 'pending');
   saveMyAnswer(val);
 };
@@ -1197,7 +1197,7 @@ async function runNextQuestion(questions, idx) {
       currentQ: questions[idx], answers, startedAt: Date.now()
     });
     setTimeout(() => runNextQuestion(questions, idx+1), 7000);
-  }, 10000);
+  }, 7000);
 }
 
 window.stopQuiz = async function() {
@@ -1206,6 +1206,7 @@ window.stopQuiz = async function() {
   document.getElementById('quizCtrlStop').style.display = 'none';
   document.getElementById('quizMasterCtrl').style.display = 'none';
   closeQuizUI();
+  resetQuizState();
 };
 
 // ── 채팅 1시간 자동 초기화 ──
