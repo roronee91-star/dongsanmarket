@@ -320,7 +320,7 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
     <div class="quiz-input-row" id="quizInputRow" style="display:none">
       <input class="quiz-input" id="quizInput" placeholder="답 입력..." maxlength="20"
         onkeydown="if(event.key==='Enter'){event.preventDefault();submitQuizAns();}">
-      <button class="quiz-submit-btn" onclick="submitQuizAns()">제출</button>
+      <button class="quiz-submit-btn" id="quizSubmitBtn" onclick="submitQuizAns()">제출</button>
     </div>
     <div class="quiz-ox-row" id="quizOxRow" style="display:none">
       <button class="quiz-ox-btn" id="quizOX_O" onclick="pickOX('O')">⭕</button>
@@ -954,20 +954,20 @@ function showQuizQuestion(q, idx, startedAt) {
 
   clearInterval(quizState.timerInterval);
   const elapsed = (Date.now() - (startedAt || Date.now())) / 1000;
-  let timeLeft = Math.max(0, Math.ceil(5 - elapsed));
+  let timeLeft = Math.max(0, Math.ceil(7 - elapsed));
 
   const bar = document.getElementById('quizTimerBar');
   const txt = document.getElementById('quizTimerText');
-  bar.style.width = (timeLeft / 5 * 100) + '%';
-  bar.className = 'quiz-timer-bar' + (timeLeft <= 2 ? ' warning' : '');
+  bar.style.width = (timeLeft / 7 * 100) + '%';
+  bar.className = 'quiz-timer-bar' + (timeLeft <= 3 ? ' warning' : '');
   txt.textContent = timeLeft + '초';
 
   if (timeLeft <= 0) { handleTimeout(); return; }
 
   quizState.timerInterval = setInterval(() => {
     timeLeft--;
-    bar.style.width = (timeLeft / 5 * 100) + '%';
-    bar.className = 'quiz-timer-bar' + (timeLeft <= 2 ? ' warning' : '');
+    bar.style.width = (timeLeft / 7 * 100) + '%';
+    bar.className = 'quiz-timer-bar' + (timeLeft <= 3 ? ' warning' : '');
     txt.textContent = timeLeft + '초';
     if (timeLeft <= 0) {
       clearInterval(quizState.timerInterval);
@@ -979,10 +979,16 @@ function showQuizQuestion(q, idx, startedAt) {
 function handleTimeout() {
   if (quizState.answered) return;
   quizState.answered = true;
-  quizState.myAnswer = '(미입력)';
-  saveMyAnswer('(미입력)');
-  showQuizBubble(myName, '⏰', 'wrong');
+  // 선택/입력된 값이 있으면 그걸로, 없으면 미입력
+  const inputVal = document.getElementById('quizInput').value.trim();
+  const currentVal = quizState.myAnswer || inputVal || '(미입력)';
+  quizState.myAnswer = currentVal;
+  document.getElementById('quizTimerText').textContent = currentVal === '(미입력)' ? '⏰ 시간초과!' : '제출완료!';
   document.getElementById('quizInput').disabled = true;
+  const btn = document.getElementById('quizSubmitBtn');
+  if (btn) { btn.textContent = currentVal === '(미입력)' ? '⏰' : '✅'; btn.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
+  showQuizBubble(myName, currentVal === '(미입력)' ? '⏰' : currentVal, currentVal === '(미입력)' ? 'wrong' : 'pending');
+  saveMyAnswer(currentVal);
 }
 
 function saveMyAnswer(ans) {
@@ -997,6 +1003,9 @@ window.submitQuizAns = function() {
   quizState.answered = true;
   quizState.myAnswer = val;
   document.getElementById('quizInput').disabled = true;
+  const btn = document.getElementById('quizSubmitBtn');
+  btn.textContent = '✅ 완료!';
+  btn.style.background = '#58c858';
   document.getElementById('quizTimerText').textContent = '제출완료!';
   document.getElementById('quizTimerBar').style.width = '100%';
   document.getElementById('quizTimerBar').className = 'quiz-timer-bar';
@@ -1006,27 +1015,19 @@ window.submitQuizAns = function() {
 
 window.pickOX = function(val) {
   if (quizState.answered) return;
-  clearInterval(quizState.timerInterval);
-  quizState.answered = true;
+  // 선택만 표시, 잠금 안함 (타이머 끝나면 자동제출)
   quizState.myAnswer = val;
   document.getElementById('quizOX_O').className = 'quiz-ox-btn' + (val==='O'?' sel-o':'');
   document.getElementById('quizOX_X').className = 'quiz-ox-btn' + (val==='X'?' sel-x':'');
-  document.getElementById('quizTimerText').textContent = '제출완료!';
-  showQuizBubble(myName, val, 'pending');
-  saveMyAnswer(val);
 };
 
 window.pickChoice = function(val) {
   if (quizState.answered) return;
-  clearInterval(quizState.timerInterval);
-  quizState.answered = true;
+  // 선택만 표시, 잠금 안함 (타이머 끝나면 자동제출)
   quizState.myAnswer = val;
   document.querySelectorAll('.quiz-choice-btn').forEach(b => {
     b.className = 'quiz-choice-btn' + (b.textContent === val ? ' selected' : '');
   });
-  document.getElementById('quizTimerText').textContent = '제출완료!';
-  showQuizBubble(myName, val, 'pending');
-  saveMyAnswer(val);
 };
 
 function showQuizReveal(q, answers) {
