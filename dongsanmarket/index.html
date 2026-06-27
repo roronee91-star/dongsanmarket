@@ -810,6 +810,15 @@ function renderPastorPanel(all) {
 
 // 오늘 날짜 기본값 세팅
 document.addEventListener('DOMContentLoaded', ()=>{
+  // 목사님 로그인 상태 복원
+  if (localStorage.getItem('isPastor') === 'true') {
+    isPastor = true;
+    document.getElementById('pastorStatus').textContent = '⚙️ 목사님 모드';
+    document.getElementById('pastorBtn').textContent = '로그아웃';
+    document.getElementById('pastorTab').style.display = '';
+    document.getElementById('statsTab').style.display = '';
+    document.getElementById('myTab').style.display = 'none';
+  }
   const today = new Date();
   const korea = new Date(today.getTime() + 9*60*60*1000);
   const d = `${korea.getUTCFullYear()}-${String(korea.getUTCMonth()+1).padStart(2,'0')}-${String(korea.getUTCDate()).padStart(2,'0')}`;
