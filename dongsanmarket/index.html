@@ -941,7 +941,7 @@ async function approveReq(id) {
   // 낙관적 업데이트
   if (cachedData) { const r=cachedData.find(x=>x.id===id); if(r) r.status='approved'; renderPastorPanel(cachedData); }
   showToast('✅ 승인 완료!');
-  apiGet({action:'approve',id}).then(()=>{ clearCache(); }).catch(()=>{ clearCache(); loadPastorPanel(); showToast('⚠️ 오류가 발생했어요'); });
+  apiGet({action:'approve',id}).then(()=>{ clearCache(); loadPastorPanel(); }).catch(()=>{ clearCache(); loadPastorPanel(); showToast('⚠️ 오류가 발생했어요'); });
 }
 
 async function rejectReq(id) {
@@ -976,7 +976,7 @@ function togglePastorMode() {
     document.getElementById('pastorTab').style.display = 'none';
     document.getElementById('statsTab').style.display = 'none';
     document.getElementById('myTab').style.display = '';
-    showPage('submit'); showToast('로그아웃 되었습니다');
+    localStorage.removeItem('isPastor'); showPage('submit'); showToast('로그아웃 되었습니다');
   } else {
     document.getElementById('pastorModal').classList.add('show');
     setTimeout(()=>document.getElementById('pastorPwd').focus(),100);
@@ -985,7 +985,7 @@ function togglePastorMode() {
 function confirmPastorLogin() {
   if (document.getElementById('pastorPwd').value === PASTOR_PASSWORD) {
     isPastor = true;
-    sessionStorage.setItem('isPastor','true');
+    localStorage.setItem('isPastor','true');
     document.getElementById('pastorStatus').textContent = '⚙️ 목사님 모드';
     document.getElementById('pastorBtn').textContent = '로그아웃';
     document.getElementById('pastorTab').style.display = '';
@@ -1006,7 +1006,7 @@ document.getElementById('pastorPwd').addEventListener('keydown', e=>{
 
 function goPlaza() {
   // 현재 목사님 모드 여부를 명확히 저장 후 이동
-  sessionStorage.setItem('isPastor', isPastor ? 'true' : 'false');
+  localStorage.setItem('isPastor', isPastor ? 'true' : 'false');
   window.location.href = 'plaza.html';
 }
 
