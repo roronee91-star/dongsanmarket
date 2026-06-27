@@ -43,10 +43,10 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .user-dot { width: 6px; height: 6px; background: #58c858; border-radius: 50%; flex-shrink: 0; }
 
 /* 조이스틱 */
-.joystick { position: fixed; left:10px; bottom:14px; z-index:50; width: 96px; height: 96px; display: grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr 1fr; gap:3px; }
-.jbtn { background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.25); border-radius: 7px; color: white; font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; }
+.joystick { position: fixed; left:10px; bottom:58px; z-index:50; width: 120px; height: 120px; display: grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr 1fr 1fr; gap:4px; }
+.jbtn { background: rgba(0,0,0,0.6); border: 2px solid rgba(255,255,255,0.35); border-radius: 10px; color: white; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; -webkit-user-select: none; min-width: 38px; min-height: 38px; }
 .jbtn.pressed { background: rgba(88,200,88,0.6); }
-.jcenter { background: rgba(255,255,255,0.08); border-radius: 50%; }
+.jcenter { background: rgba(255,255,255,0.06); border-radius: 50%; border: 1px solid rgba(255,255,255,0.1); }
 
 /* 채팅 메시지 박스 - 우측 상단 */
 .chat-panel { position: fixed; top:48px; right:8px; z-index:50; width: min(320px, 38vw, calc(100vw - 16px)); }
@@ -659,13 +659,13 @@ window.enterPlaza = async function() {
     const data=snap.val()||{};
     const msgs=Object.values(data).sort((a,b)=>(a.t||0)-(b.t||0));
     const box=document.getElementById('chatBox');
-    const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<30;
     box.innerHTML=msgs.map(m=>
       m.system
         ?`<div class="chat-msg sys"><span class="ct">${m.text}</span></div>`
         :`<div class="chat-msg"><span class="cn">${m.name}</span> <span class="ct">${m.text}</span></div>`
     ).join('');
-    if(atBottom) box.scrollTop=box.scrollHeight;
+    // 항상 최신 메시지로 스크롤
+    box.scrollTop = box.scrollHeight;
 
     const now2=Date.now();
     const newMsgs=msgs.filter(m=>!m.system&&m.t&&m.t>lastSeenT&&m.t>now2-10000);
