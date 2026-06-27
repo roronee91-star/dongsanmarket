@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>동산마켓 플레이스 🪙</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;900&display=swap');
+  :root {
+    --primary: #6C63FF;
+    --primary-light: #F0EFFF;
+    --primary-dark: #4B44CC;
+    --accent: #FF6B9D;
+    --green: #00C896;
+    --green-light: #E6FBF5;
+    --red: #FF5C6A;
+    --red-light: #FFF0F1;
+    --yellow: #FFB84D;
+    --yellow-light: #FFF8EC;
+    --bg: #F7F8FC;
+    --white: #FFFFFF;
+    --text: #2D2D3A;
+    --text-soft: #8E8EA0;
+    --border: #EAEAF0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  #loadingBar {
+    display: none; position: fixed; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent), var(--primary));
+    background-size: 200%; animation: shimmer 1s infinite; z-index: 9999;
+  }
+  @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+  .pastor-bar {
+    background: var(--white); border-bottom: 1px solid var(--border);
+    padding: 8px 16px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .pastor-bar span { font-size: 12px; color: var(--text-soft); font-weight: 500; }
+  .pastor-bar button {
+    background: var(--primary-light); border: none; color: var(--primary-dark);
+    padding: 6px 14px; border-radius: 20px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+
+  .header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    padding: 24px 16px 20px; text-align: center;
+  }
+  .header .coin-icon { font-size: 34px; display: block; margin-bottom: 6px; }
+  .header h1 { font-size: 22px; font-weight: 900; color: white; }
+  .header p { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 4px; }
+
+  .nav {
+    display: flex; background: var(--white); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100; overflow-x: auto;
+  }
+  .nav button {
+    flex: 1; min-width: 60px; padding: 12px 4px; background: none; border: none;
+    color: var(--text-soft); font-family: inherit; font-size: 11px; font-weight: 600;
+    cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; white-space: nowrap;
+  }
+  .nav button.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+  .page { display: none; padding: 14px; max-width: 540px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  .card {
+    background: var(--white); border-radius: 16px; padding: 16px;
+    margin-bottom: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--text-soft); margin-bottom: 5px; }
+  input, textarea {
+    width: 100%; padding: 11px 13px; border: 1.5px solid var(--border);
+    border-radius: 10px; font-family: inherit; font-size: 14px; color: var(--text);
+    background: var(--bg); outline: none; transition: border-color 0.2s; margin-bottom: 10px;
+  }
+  input:focus, textarea:focus { border-color: var(--primary); background: white; }
+  textarea { resize: vertical; min-height: 75px; }
+
+  /* ACTION CHIPS */
+  .action-grid { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+  .action-chip {
+    padding: 11px 13px; border: 2px solid var(--border); border-radius: 12px;
+    background: var(--white); cursor: pointer; display: flex; align-items: center;
+    gap: 11px; font-family: inherit; transition: border-color 0.15s, background 0.15s;
+  }
+  .action-chip.selected { border-color: var(--primary); background: var(--primary-light); }
+  .action-chip .chip-icon { font-size: 20px; flex-shrink: 0; }
+  .action-chip .chip-body { flex: 1; text-align: left; }
+  .action-chip .chip-name { font-size: 13px; font-weight: 600; color: var(--text); display: block; }
+  .action-chip .chip-note { font-size: 11px; color: var(--text-soft); display: block; margin-top: 1px; }
+  .action-chip .chip-coin { font-size: 13px; font-weight: 800; color: var(--primary); flex-shrink: 0; }
+  .action-chip .chip-check {
+    width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border);
+    background: white; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0; color: transparent; transition: all 0.15s;
+  }
+  .action-chip.selected .chip-check { background: var(--primary); border-color: var(--primary); color: white; }
+
+  /* PHOTO */
+  .photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  .photo-thumb-wrap { position: relative; width: 76px; height: 76px; }
+  .photo-thumb-wrap img { width: 76px; height: 76px; border-radius: 10px; object-fit: cover; display: block; }
+  .photo-thumb-del {
+    position: absolute; top: -5px; right: -5px; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--red); color: white; border: none;
+    font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .photo-add-btn {
+    width: 76px; height: 76px; border-radius: 10px; border: 2px dashed var(--border);
+    background: var(--bg); display: flex; flex-direction: column; align-items: center;
+    justify-content: center; cursor: pointer; font-size: 20px; color: var(--text-soft); gap: 2px; transition: all 0.15s;
+  }
+  .photo-add-btn:hover { border-color: var(--primary); color: var(--primary); }
+  .photo-add-btn span { font-size: 10px; font-weight: 600; }
+  .photo-fallback {
+    width: 76px; height: 76px; border-radius: 10px; background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center; font-size: 24px;
+  }
+
+  /* PREVIEW */
+  .preview-box {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    border-radius: 16px; padding: 18px; text-align: center; color: white; margin-bottom: 12px;
+  }
+  .preview-box .big-num { font-size: 40px; font-weight: 900; line-height: 1; }
+  .preview-box .label { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+
+  .info-card {
+    background: var(--primary-light); border-radius: 14px; padding: 14px;
+    margin-bottom: 12px; border: 1px solid #D8D6FF;
+  }
+  .info-card .info-title { font-size: 13px; font-weight: 700; color: var(--primary-dark); margin-bottom: 6px; }
+  .info-card .info-row { font-size: 12px; color: var(--primary-dark); line-height: 2; }
+
+  .btn {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    color: white; box-shadow: 0 4px 14px rgba(108,99,255,0.3);
+  }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-sm { width: auto; padding: 6px 13px; font-size: 12px; border-radius: 8px; }
+  .btn-approve { background: var(--green); color: white; }
+  .btn-reject { background: var(--red); color: white; }
+  .btn-delete { background: var(--bg); color: var(--text-soft); border: 1px solid var(--border); }
+
+  /* MY COIN */
+  .my-coin-box {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    border-radius: 18px; padding: 22px; text-align: center; color: white; margin-bottom: 12px;
+  }
+  .my-coin-box .big-num { font-size: 48px; font-weight: 900; line-height: 1; }
+  .my-coin-box .label { font-size: 13px; opacity: 0.85; margin-top: 5px; }
+
+  /* BADGE */
+  .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  .badge-pending { background: var(--yellow-light); color: #B07800; }
+  .badge-approved { background: var(--green-light); color: #007A5A; }
+  .badge-rejected { background: var(--red-light); color: #CC2233; }
+
+  /* REQ ITEM */
+  .req-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .req-item:last-child { border-bottom: none; }
+  .req-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .req-name { font-weight: 700; font-size: 14px; }
+  .req-action { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .req-coins { font-size: 13px; color: var(--primary); font-weight: 700; margin-top: 3px; }
+  .req-buttons { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+  /* RANKING */
+  .rank-item { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--border); }
+  .rank-item:last-child { border-bottom: none; }
+  .rank-num { font-size: 17px; font-weight: 900; width: 30px; text-align: center; color: var(--text-soft); flex-shrink: 0; }
+  .rank-name { flex: 1; font-weight: 600; font-size: 14px; }
+  .rank-coin { font-weight: 800; font-size: 14px; color: var(--primary); }
+
+  .top1-card {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    border-radius: 16px; padding: 18px; color: white; margin-bottom: 12px;
+  }
+  .top1-card .label { font-size: 12px; opacity: 0.85; margin-bottom: 3px; }
+  .top1-card .name { font-size: 20px; font-weight: 900; }
+  .top1-card .coins { font-size: 24px; font-weight: 900; margin-top: 2px; }
+
+  /* 현황판 */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-box {
+    background: var(--white); border-radius: 14px; padding: 16px; text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+  .stat-box .stat-num { font-size: 28px; font-weight: 900; color: var(--primary); line-height: 1; }
+  .stat-box .stat-label { font-size: 11px; color: var(--text-soft); font-weight: 600; margin-top: 4px; }
+  .stat-box.full { grid-column: span 2; }
+
+  /* BULK */
+  .bulk-bar {
+    display: none; align-items: center; justify-content: space-between;
+    background: var(--primary-light); border-radius: 12px; padding: 10px 13px; margin-bottom: 10px; gap: 8px;
+  }
+  .bulk-bar.show { display: flex; }
+  .bulk-bar-left { font-size: 13px; font-weight: 600; color: var(--primary-dark); }
+  .bulk-btn { padding: 7px 14px; border: none; border-radius: 8px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .bulk-btn-approve { background: var(--green); color: white; }
+  .bulk-btn-reject { background: var(--red); color: white; }
+
+  .pastor-checkbox {
+    width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--border);
+    background: white; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; flex-shrink: 0; transition: all 0.15s; color: transparent;
+  }
+  .pastor-checkbox.checked { background: var(--primary); border-color: var(--primary); color: white; }
+
+  .photo-link {
+    display: inline-flex; align-items: center; gap: 4px; margin-top: 5px; margin-right: 4px;
+    padding: 4px 11px; background: var(--primary-light); color: var(--primary-dark);
+    border-radius: 20px; font-size: 11px; font-weight: 600; text-decoration: none;
+  }
+
+  #toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text); color: white; padding: 11px 22px;
+    border-radius: 100px; font-size: 13px; font-weight: 600;
+    z-index: 9999; transition: transform 0.3s ease; pointer-events: none; white-space: nowrap;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 999; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: white; border-radius: 20px; padding: 22px; width: 290px; max-width: 90%; }
+  .modal-box h3 { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+
+  .empty-msg { text-align: center; color: var(--text-soft); font-size: 13px; padding: 22px 0; }
+  .section-label { font-size: 11px; font-weight: 600; color: var(--text-soft); margin-bottom: 9px; }
+  .divider { height: 1px; background: var(--border); margin: 10px 0; }
+</style>
+</head>
+<body>
+<div id="loadingBar"></div>
+
+<div class="pastor-bar" id="pastorBar">
+  <span id="pastorStatus">👤 청년 모드</span>
+  <button onclick="togglePastorMode()" id="pastorBtn">목사님 로그인</button>
+</div>
+
+<div class="header">
+  <span class="coin-icon">🪙</span>
+  <h1>동산마켓 플레이스</h1>
+  <p>데나리온 적립 · 2026.06.20 ~ 07.04 리딤제 당일</p>
+</div>
+
+<div class="nav">
+  <button class="active" onclick="showPage('submit')">📝 제출</button>
+  <button onclick="showPage('my')" id="myTab">👤 내현황</button>
+  <button onclick="showPage('ranking')">🏆 랭킹</button>
+  <button onclick="goPlaza()">🏘️ 광장</button>
+  <button onclick="showPage('stats')" id="statsTab" style="display:none">📊 현황판</button>
+  <button onclick="showPage('pastor')" id="pastorTab" style="display:none">⚙️ 승인</button>
+</div>
+
+<!-- 제출하기 -->
+<div class="page active" id="page-submit">
+  <div class="card">
+    <div class="card-title">🙋 내 이름</div>
+    <input type="text" id="inputName" placeholder="이름을 입력하세요">
+    <div style="font-size:12px;color:var(--accent);font-weight:600;margin-top:-4px">⚠️ 실명을 입력해야 데나리온이 누적 적립돼요!</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">✅ 내가 한 행동</div>
+    <div class="section-label">여러 개 선택 가능 · 다시 누르면 해제돼요</div>
+    <div class="action-grid" id="actionGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📸 인증사진</div>
+    <div class="section-label">여러 장 첨부 가능 · 5MB 이하</div>
+    <div class="photo-grid" id="photoGrid"></div>
+    <input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+  </div>
+
+  <div class="card">
+    <div class="card-title">💬 메모 (선택)</div>
+    <textarea id="inputMemo" placeholder="추가로 전하고 싶은 말"></textarea>
+  </div>
+
+  <div class="preview-box">
+    <div class="big-num" id="previewCoins">0 데나리온</div>
+    <div class="label">목사님 승인 후 최종 적립됩니다</div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-title">📅 운영 안내</div>
+    <div class="info-row">
+      🗓️ <strong>기간</strong> 2026.06.20(토) ~ 07.04(토)<br>
+      🛒 <strong>달란트시장</strong> 물품 15가지 이상<br>
+      🎁 <strong>애장품 경매</strong> 목사님·리더 애장품 / 시크릿 선물
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="submitRequest()">📤 목사님께 제출하기</button>
+  <div style="height:20px"></div>
+</div>
+
+<!-- 내 현황 -->
+<div class="page" id="page-my">
+  <div class="my-coin-box">
+    <div class="big-num" id="myTotalCoins">0</div>
+    <div class="label">🪙 내 데나리온 총합 (승인된 것만)</div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <input type="text" id="myNameInput" placeholder="이름으로 조회하세요" oninput="loadMyHistory()" style="margin-bottom:0">
+  </div>
+  <div class="card">
+    <div class="card-title">📋 내 제출 내역</div>
+    <div id="myHistoryList"><div class="empty-msg">이름을 입력하면 내역이 표시됩니다</div></div>
+  </div>
+</div>
+
+<!-- 랭킹 -->
+<div class="page" id="page-ranking">
+  <div class="top1-card">
+    <div class="label">👑 누적 1등</div>
+    <div class="name" id="top1Name">-</div>
+    <div class="coins" id="top1Coins">0 데나리온</div>
+  </div>
+  <div class="card">
+    <div class="card-title">🏆 전체 랭킹</div>
+    <div id="rankingList"><div class="empty-msg">아직 데이터가 없습니다</div></div>
+  </div>
+</div>
+
+<!-- 현황판 (목사님 전용) -->
+<div class="page" id="page-stats">
+  <div class="stat-grid">
+    <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">총 제출 건수</div></div>
+    <div class="stat-box"><div class="stat-num" id="statApproved">0</div><div class="stat-label">승인 완료</div></div>
+    <div class="stat-box"><div class="stat-num" id="statPending">0</div><div class="stat-label">대기 중</div></div>
+    <div class="stat-box"><div class="stat-num" id="statCoins">0</div><div class="stat-label">총 적립 데나리온</div></div>
+    <div class="stat-box full"><div class="stat-num" id="statMembers">0</div><div class="stat-label">참여 청년 수</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 전체 적립 현황</div>
+    <div id="statList"><div class="empty-msg">데이터를 불러오는 중...</div></div>
+  </div>
+</div>
+
+<!-- 승인관리 -->
+<div class="page" id="page-pastor">
+
+  <!-- 수동 적립 카드 (6번) -->
+  <div class="card" style="border:2px solid var(--yellow);margin-bottom:12px">
+    <div class="card-title">✏️ 수동 적립</div>
+    <input type="text" id="manualName" placeholder="청년 이름 입력" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <input type="number" id="manualCoins" placeholder="데나리온 수" min="1" style="margin-bottom:0;flex:1">
+      <span style="font-size:13px;color:var(--text-soft);font-weight:600">데나리온</span>
+    </div>
+    <input type="text" id="manualMemo" placeholder="메모 (선택)" style="margin-bottom:8px">
+    <button class="btn btn-primary" style="padding:11px;font-size:14px" onclick="manualCredit()">🪙 적립하기</button>
+  </div>
+
+  <!-- 게임 랭킹 카드 -->
+  <div class="card" style="border:2px solid #FFD700;margin-bottom:12px">
+    <div class="card-title">🎮 말씀 타자 게임 랭킹</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+      <input type="date" id="gameDate" style="flex:1;margin-bottom:0">
+      <button class="btn btn-secondary" style="padding:8px 12px;font-size:12px" onclick="loadGameRankingPastor()">조회</button>
+    </div>
+    <div id="gameRankingPastor"><div class="empty-msg">날짜를 선택해주세요</div></div>
+    <button class="btn btn-primary" id="gameRewardBtn" style="display:none;margin-top:10px;padding:11px;font-size:14px;background:linear-gradient(180deg,#FFD700,#FFA000);color:#1a1a2e" onclick="giveGameRewards()">🏆 순위별 데나리온 지급하기</button>
+  </div>
+
+  <div class="card" style="border:2px solid var(--primary)">
+    <div class="card-title">⏳ 승인 대기</div>
+    <div class="bulk-bar" id="bulkBar">
+      <span class="bulk-bar-left" id="bulkCount">0개 선택</span>
+      <div style="display:flex;gap:6px">
+        <button class="bulk-btn bulk-btn-approve" onclick="bulkApprove()">✅ 일괄승인</button>
+        <button class="bulk-btn bulk-btn-reject" onclick="bulkReject()">❌ 일괄반려</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <div class="pastor-checkbox" id="checkAll" onclick="toggleCheckAll()"></div>
+      <span style="font-size:12px;color:var(--text-soft);font-weight:600">전체 선택</span>
+    </div>
+    <div id="pendingList"><div class="empty-msg">대기 중인 제출이 없습니다 ✅</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">✅ 승인 완료</div>
+    <div id="approvedList"><div class="empty-msg">승인된 내역이 없습니다</div></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div class="modal-overlay" id="pastorModal">
+  <div class="modal-box">
+    <h3>🔐 목사님 로그인</h3>
+    <label>비밀번호</label>
+    <input type="password" id="pastorPwd" placeholder="비밀번호 입력">
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1;padding:11px;font-size:14px" onclick="confirmPastorLogin()">로그인</button>
+      <button class="btn" style="flex:1;padding:11px;font-size:14px;background:var(--bg);color:var(--text)" onclick="closePastorModal()">취소</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbxoVhMwEQuxXsQX_8GzzucY6LJggktnZW7SKfXXf23DGiJVzzdJb-1Za0zatedIbW6e/exec';
+const PASTOR_PASSWORD = '2014426';
+const CACHE_TTL = 30000; // 30초 캐시 유지
+
+const ACTIONS = [
+  { id: 'worship',    icon: '⛪', name: '예배 출석 (마다)',          coins: 20,  note: '매 예배 출석 시 적립' },
+  { id: 'prayer',     icon: '🙏', name: '기도회 참석',               coins: 10,  note: '기도회 참석 시 적립' },
+  { id: 'bible_mem',  icon: '📜', name: '성경 암송 (목사님 확인)',   coins: 30,  note: '목사님께 직접 확인 받은 경우' },
+  { id: 'bible_copy', icon: '✍️', name: '성경 필사 제출 (1장)',      coins: 20,  note: '1장 단위로 제출' },
+  { id: 'qt',         icon: '📖', name: 'QT 인증',                   coins: 30,  note: 'QT 완료 인증' },
+  { id: 'invite_me',  icon: '💌', name: '친구 초청 (초청한 사람)',   coins: 100, note: '실제 참석 시 지급' },
+  { id: 'invite_you', icon: '🤝', name: '친구 초청 (초청받은 친구)', coins: 100, note: '실제 참석 시 지급' },
+  { id: 'read_bible', icon: '📚', name: '성경 통독 인증',            coins: 30,  note: '정해진 분량 완료 시' },
+  { id: 'sns',        icon: '📱', name: '리딤제 홍보 SNS 인증',      coins: 30,  note: 'SNS 홍보 인증 시' },
+];
+
+let isPastor = false;
+let selectedActions = new Set();
+let cachedData = null;
+let cacheTime = 0;
+let photos = [];
+let checkedIds = new Set();
+let prefetchPromise = null;
+
+// ── API ──
+async function apiGet(params) {
+  const url = new URL(API_URL);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k,v));
+  const res = await fetch(url.toString());
+  return res.json();
+}
+async function apiPost(body) {
+  const res = await fetch(API_URL, { method:'POST', body: JSON.stringify(body) });
+  return res.json();
+}
+
+// ── 캐시 (30초 유지, 페이지 이동해도 재사용) ──
+async function getRequests(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && cachedData && (now - cacheTime) < CACHE_TTL) return cachedData;
+  showLoading(true);
+  try {
+    const d = await apiGet({ action:'getAll' });
+    cachedData = d;
+    cacheTime = Date.now();
+    return d;
+  } catch(e) { showToast('⚠️ 서버 연결 실패'); return cachedData || []; }
+  finally { showLoading(false); }
+}
+
+function clearCache() { cachedData = null; cacheTime = 0; prefetchPromise = null; }
+
+// 백그라운드 미리 로딩
+function prefetch() {
+  const now = Date.now();
+  if (cachedData && (now - cacheTime) < CACHE_TTL) return;
+  if (prefetchPromise) return;
+  prefetchPromise = apiGet({ action:'getAll' }).then(d => {
+    cachedData = d; cacheTime = Date.now(); prefetchPromise = null;
+  }).catch(() => { prefetchPromise = null; });
+}
+
+function showLoading(on) { document.getElementById('loadingBar').style.display = on ? 'block' : 'none'; }
+
+// ── 스켈레톤 ──
+function skeleton(n=3) {
+  return Array(n).fill(`
+    <div class="req-item" style="opacity:0.4">
+      <div style="height:14px;width:60%;background:var(--border);border-radius:6px;margin-bottom:8px"></div>
+      <div style="height:12px;width:80%;background:var(--border);border-radius:6px;margin-bottom:6px"></div>
+      <div style="height:12px;width:40%;background:var(--border);border-radius:6px"></div>
+    </div>
+  `).join('');
+}
+
+// ── ACTION GRID ──
+function buildActionGrid() {
+  document.getElementById('actionGrid').innerHTML = ACTIONS.map(a => `
+    <button class="action-chip" onclick="toggleAction('${a.id}')" id="chip-${a.id}">
+      <span class="chip-icon">${a.icon}</span>
+      <span class="chip-body">
+        <span class="chip-name">${a.name}</span>
+        <span class="chip-note">${a.note}</span>
+      </span>
+      <span class="chip-coin">+${a.coins}</span>
+      <span class="chip-check">✓</span>
+    </button>
+  `).join('');
+}
+
+function toggleAction(id) {
+  if (selectedActions.has(id)) selectedActions.delete(id);
+  else selectedActions.add(id);
+  document.getElementById('chip-'+id).classList.toggle('selected', selectedActions.has(id));
+  updatePreview();
+}
+
+function updatePreview() {
+  let total = 0;
+  selectedActions.forEach(id => { const a = ACTIONS.find(x=>x.id===id); if(a) total+=a.coins; });
+  document.getElementById('previewCoins').textContent = total + ' 데나리온';
+}
+
+// ── PHOTOS ──
+function handlePhotos(e) {
+  Array.from(e.target.files).forEach(file => {
+    if (file.size > 5*1024*1024) { showToast('⚠️ 5MB 이하 사진만 가능해요'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const url = ev.target.result;
+      if (!url || !url.startsWith('data:')) return;
+      const ci = url.indexOf(',');
+      photos.push({ base64: url.slice(ci+1), mime: url.slice(5,ci).split(';')[0], preview: url });
+      renderPhotos();
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = '';
+}
+function removePhoto(i) { photos.splice(i,1); renderPhotos(); }
+function renderPhotos() {
+  document.getElementById('photoGrid').innerHTML = photos.map((p,i) => `
+    <div class="photo-thumb-wrap">
+      <img src="${p.preview}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+      <div class="photo-fallback" style="display:none">🖼️</div>
+      <button class="photo-thumb-del" onclick="removePhoto(${i})">✕</button>
+    </div>
+  `).join('') + `<div class="photo-add-btn" onclick="document.getElementById('photoInput').click()"><span>➕</span><span>추가</span></div>`;
+}
+
+// ── SUBMIT (낙관적 업데이트) ──
+async function submitRequest() {
+  const name = document.getElementById('inputName').value.trim();
+  if (!name) { showToast('이름을 입력해주세요!'); return; }
+  if (selectedActions.size === 0) { showToast('행동을 하나 이상 선택해주세요!'); return; }
+
+  const selectedList = [...selectedActions].map(id => { const a=ACTIONS.find(x=>x.id===id); return {id,name:a.name,coins:a.coins}; });
+  const totalCoins = selectedList.reduce((s,a)=>s+a.coins,0);
+  const memo = document.getElementById('inputMemo').value.trim();
+  const photosCopy = photos.map(p=>({base64:p.base64,mime:p.mime}));
+
+  // 낙관적 업데이트: 화면 먼저 초기화
+  const submittedName = name;
+  selectedActions.clear();
+  document.querySelectorAll('.action-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('inputMemo').value='';
+  photos=[]; renderPhotos(); updatePreview();
+  showToast('📤 제출 중...');
+
+  // 캐시에 임시 항목 추가
+  const tempId = 'temp_'+Date.now();
+  const tempItem = {
+    id: tempId, name: submittedName,
+    actionsText: selectedList.map(a=>a.name).join(', '),
+    totalCoins, memo, photoUrl: '', status: 'pending',
+    submittedAt: new Date().toLocaleString('ko-KR'), approvedAt: '',
+  };
+  if (cachedData) cachedData.push(tempItem);
+
+  showPage('my');
+  document.getElementById('myNameInput').value = submittedName;
+  loadMyHistory();
+
+  // 백그라운드에서 실제 서버 전송
+  try {
+    await apiPost({ name: submittedName, actions: selectedList, totalCoins, memo, photos: photosCopy });
+    clearCache();
+    showToast('✅ 제출 완료! 목사님 승인을 기다려주세요');
+    loadMyHistory();
+  } catch(e) {
+    // 실패 시 임시 항목 제거
+    if (cachedData) cachedData = cachedData.filter(r=>r.id!==tempId);
+    showToast('⚠️ 제출 실패. 다시 시도해주세요');
+  }
+}
+
+// ── MY HISTORY ──
+async function loadMyHistory() {
+  const name = document.getElementById('myNameInput').value.trim();
+  const el = document.getElementById('myHistoryList');
+  const coinEl = document.getElementById('myTotalCoins');
+  if (!name) { el.innerHTML='<div class="empty-msg">이름을 입력하면 내역이 표시됩니다</div>'; coinEl.textContent='0'; return; }
+
+  // 캐시 있으면 즉시 표시
+  if (cachedData) renderMyHistory(name);
+  else el.innerHTML = skeleton();
+
+  const all = await getRequests();
+  renderMyHistory(name);
+}
+
+function renderMyHistory(name) {
+  const all = cachedData || [];
+  const el = document.getElementById('myHistoryList');
+  const coinEl = document.getElementById('myTotalCoins');
+  const mine = all.filter(r=>r.name===name);
+  coinEl.textContent = mine.filter(r=>r.status==='approved').reduce((s,r)=>s+r.totalCoins,0);
+  if (mine.length===0) { el.innerHTML='<div class="empty-msg">제출 내역이 없습니다</div>'; return; }
+  el.innerHTML = [...mine].reverse().map(r=>`
+    <div class="req-item">
+      <div class="req-top">
+        <div>
+          <div class="req-action">${r.actionsText}</div>
+          <div class="req-coins">+${r.totalCoins} 데나리온</div>
+          <div style="font-size:11px;color:var(--text-soft);margin-top:2px">${r.submittedAt}</div>
+        </div>
+        <span class="badge badge-${r.status}">${statusLabel(r.status)}</span>
+      </div>
+      ${r.memo?`<div style="font-size:12px;color:var(--text-soft);margin-top:5px">💬 ${r.memo}</div>`:''}
+      ${r.photoUrl?r.photoUrl.split('\n').filter(Boolean).map(u=>`<a href="${u}" target="_blank" class="photo-link">📸 사진</a>`).join(''):''}
+    </div>
+  `).join('');
+}
+
+// ── RANKING ──
+async function loadRanking() {
+  const el = document.getElementById('rankingList');
+  if (cachedData) renderRanking();
+  else el.innerHTML = skeleton(5);
+  await getRequests();
+  renderRanking();
+}
+
+function renderRanking() {
+  const all = cachedData || [];
+  const map = {};
+  all.filter(r=>r.status==='approved').forEach(r=>{ map[r.name]=(map[r.name]||0)+r.totalCoins; });
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const rankEl = document.getElementById('rankingList');
+  const top1Name = document.getElementById('top1Name');
+  const top1Coins = document.getElementById('top1Coins');
+  if (sorted.length===0) { rankEl.innerHTML='<div class="empty-msg">아직 데이터가 없습니다</div>'; top1Name.textContent='-'; top1Coins.textContent='0 데나리온'; return; }
+  top1Name.textContent = sorted[0][0];
+  top1Coins.textContent = sorted[0][1]+' 데나리온';
+  const medals = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  rankEl.innerHTML = sorted.slice(0,5).map(([name,coins],i)=>`
+    <div class="rank-item">
+      <div class="rank-num">${medals[i]}</div>
+      <div class="rank-name">${name}</div>
+      <div class="rank-coin">${coins} 데나리온</div>
+    </div>
+  `).join('');
+}
+
+// ── 현황판 ──
+async function loadStats() {
+  const el = document.getElementById('statList');
+  if (cachedData) renderStats();
+  else el.innerHTML = skeleton();
+  await getRequests();
+  renderStats();
+}
+
+function renderStats() {
+  const all = cachedData || [];
+  const approved = all.filter(r=>r.status==='approved');
+  const pending = all.filter(r=>r.status==='pending');
+  const totalCoins = approved.reduce((s,r)=>s+r.totalCoins,0);
+  const members = new Set(approved.map(r=>r.name)).size;
+  document.getElementById('statTotal').textContent = all.length;
+  document.getElementById('statApproved').textContent = approved.length;
+  document.getElementById('statPending').textContent = pending.length;
+  document.getElementById('statCoins').textContent = totalCoins;
+  document.getElementById('statMembers').textContent = members;
+  const map = {};
+  approved.forEach(r=>{ map[r.name]=(map[r.name]||0)+r.totalCoins; });
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const el = document.getElementById('statList');
+  if (sorted.length===0) { el.innerHTML='<div class="empty-msg">아직 데이터가 없습니다</div>'; return; }
+  el.innerHTML = sorted.map(([name,coins],i)=>`
+    <div class="rank-item">
+      <div class="rank-num" style="font-size:13px;color:var(--text-soft)">${i+1}</div>
+      <div class="rank-name">${name}</div>
+      <div class="rank-coin">${coins} 데나리온</div>
+    </div>
+  `).join('');
+}
+
+// ── PASTOR PANEL ──
+function updateBulkBar() {
+  const bar = document.getElementById('bulkBar');
+  const count = document.getElementById('bulkCount');
+  if (checkedIds.size>0) { bar.classList.add('show'); count.textContent=checkedIds.size+'개 선택'; }
+  else bar.classList.remove('show');
+  const allIds = [...document.querySelectorAll('[data-pid]')].map(e=>e.dataset.pid);
+  const ca = document.getElementById('checkAll');
+  const allChecked = allIds.length>0 && allIds.every(id=>checkedIds.has(id));
+  ca.classList.toggle('checked', allChecked);
+  ca.textContent = allChecked ? '✓' : '';
+}
+
+function toggleCheck(id) {
+  if (checkedIds.has(id)) checkedIds.delete(id); else checkedIds.add(id);
+  const el = document.getElementById('pchk-'+id);
+  el.classList.toggle('checked', checkedIds.has(id));
+  el.textContent = checkedIds.has(id) ? '✓' : '';
+  updateBulkBar();
+}
+
+function toggleCheckAll() {
+  const allIds = [...document.querySelectorAll('[data-pid]')].map(e=>e.dataset.pid);
+  const allChecked = allIds.every(id=>checkedIds.has(id));
+  allIds.forEach(id => {
+    if (allChecked) checkedIds.delete(id); else checkedIds.add(id);
+    const el = document.getElementById('pchk-'+id);
+    if (el) { el.classList.toggle('checked',!allChecked); el.textContent=!allChecked?'✓':''; }
+  });
+  updateBulkBar();
+}
+
+async function bulkApprove() {
+  if (checkedIds.size===0) return;
+  const n = checkedIds.size;
+  if (!confirm(n+'개를 일괄 승인할까요?')) return;
+  showLoading(true);
+  try {
+    for (const id of [...checkedIds]) await apiGet({action:'approve',id});
+    checkedIds.clear(); clearCache(); showToast('✅ '+n+'개 일괄 승인 완료!'); loadPastorPanel();
+  } finally { showLoading(false); }
+}
+
+async function bulkReject() {
+  if (checkedIds.size===0) return;
+  const n = checkedIds.size;
+  if (!confirm(n+'개를 일괄 반려할까요?')) return;
+  showLoading(true);
+  try {
+    for (const id of [...checkedIds]) await apiGet({action:'reject',id});
+    checkedIds.clear(); clearCache(); showToast('❌ '+n+'개 일괄 반려 완료'); loadPastorPanel();
+  } finally { showLoading(false); }
+}
+
+async function loadPastorPanel() {
+  clearCache(); checkedIds.clear();
+  const pendEl = document.getElementById('pendingList');
+  const appEl = document.getElementById('approvedList');
+  pendEl.innerHTML = skeleton(); appEl.innerHTML = skeleton(2);
+  document.getElementById('bulkBar').classList.remove('show');
+  const ca = document.getElementById('checkAll'); ca.classList.remove('checked'); ca.textContent='';
+  const all = await getRequests(true);
+  renderPastorPanel(all);
+}
+
+function renderPastorPanel(all) {
+  const pending = all.filter(r=>r.status==='pending');
+  const approved = all.filter(r=>r.status==='approved');
+  const pendEl = document.getElementById('pendingList');
+  const appEl = document.getElementById('approvedList');
+
+  pendEl.innerHTML = pending.length===0 ? '<div class="empty-msg">대기 중인 제출이 없습니다 ✅</div>' :
+    [...pending].reverse().map(r=>`
+      <div class="req-item">
+        <div class="req-top">
+          <div class="pastor-checkbox" id="pchk-${r.id}" data-pid="${r.id}" onclick="toggleCheck('${r.id}')"></div>
+          <div style="flex:1">
+            <div class="req-name">${r.name}</div>
+            <div class="req-action">${r.actionsText}</div>
+            <div class="req-coins">+${r.totalCoins} 데나리온</div>
+            <div style="font-size:11px;color:var(--text-soft);margin-top:2px">${r.submittedAt}</div>
+          </div>
+        </div>
+        ${r.memo?`<div style="font-size:12px;color:var(--text-soft);margin-top:5px">💬 ${r.memo}</div>`:''}
+        ${r.photoUrl?r.photoUrl.split('\n').filter(Boolean).map(u=>`<a href="${u}" target="_blank" class="photo-link">📸 인증사진</a>`).join(''):'<div style="font-size:11px;color:#ccc;margin-top:4px">📷 사진 없음</div>'}
+        <div class="req-buttons">
+          <button class="btn btn-approve btn-sm" onclick="approveReq('${r.id}')">✅ 승인</button>
+          <button class="btn btn-reject btn-sm" onclick="rejectReq('${r.id}')">❌ 반려</button>
+          <button class="btn btn-sm" style="background:#FFF8EC;color:#B07800;border:1px solid #FFE0A0" onclick="renameReq('${r.id}','${r.name}')">✏️ 이름</button>
+          <button class="btn btn-delete btn-sm" onclick="deleteReq('${r.id}')">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+
+  appEl.innerHTML = approved.length===0 ? '<div class="empty-msg">승인된 내역이 없습니다</div>' :
+    [...approved].reverse().slice(0,50).map(r=>`
+      <div class="req-item">
+        <div class="req-top">
+          <div>
+            <div class="req-name">${r.name}</div>
+            <div class="req-action">${r.actionsText}</div>
+            <div class="req-coins">+${r.totalCoins} 데나리온</div>
+          </div>
+          <span class="badge badge-approved">승인됨</span>
+        </div>
+        ${r.photoUrl?r.photoUrl.split('\n').filter(Boolean).map(u=>`<a href="${u}" target="_blank" class="photo-link">📸 사진</a>`).join(''):''}
+        <div class="req-buttons">
+          <button class="btn btn-sm" style="background:#FFF8EC;color:#B07800;border:1px solid #FFE0A0" onclick="renameReq('${r.id}','${r.name}')">✏️ 이름</button>
+          <button class="btn btn-delete btn-sm" onclick="deleteReq('${r.id}')">🗑️ 삭제</button>
+        </div>
+      </div>
+    `).join('');
+}
+
+// 오늘 날짜 기본값 세팅
+document.addEventListener('DOMContentLoaded', ()=>{
+  const today = new Date();
+  const korea = new Date(today.getTime() + 9*60*60*1000);
+  const d = `${korea.getUTCFullYear()}-${String(korea.getUTCMonth()+1).padStart(2,'0')}-${String(korea.getUTCDate()).padStart(2,'0')}`;
+  const el = document.getElementById('gameDate');
+  if (el) el.value = d;
+});
+
+// ── Firebase 초기화 (게임 랭킹용) ──
+let _fbDb = null;
+async function getFbDb() {
+  if (_fbDb) return _fbDb;
+  const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+  const { getDatabase } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+  const fbConfig = {
+    apiKey: "AIzaSyD3YZHM-GRqEQDQIR9shFQ7bZMhsBjB-NQ",
+    authDomain: "talentmarket-7e480.firebaseapp.com",
+    databaseURL: "https://talentmarket-7e480-default-rtdb.firebaseio.com",
+    projectId: "talentmarket-7e480",
+    storageBucket: "talentmarket-7e480.firebasestorage.app",
+    messagingSenderId: "1007328330532",
+    appId: "1:1007328330532:web:eae693dd7ff0a6bf33a9b1"
+  };
+  const existingApps = getApps();
+  const app = existingApps.length ? existingApps[0] : initializeApp(fbConfig);
+  _fbDb = getDatabase(app);
+  return _fbDb;
+}
+
+async function getGameRecords(dateKey) {
+  const { ref, get } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+  const db = await getFbDb();
+  const snap = await get(ref(db, `game/${dateKey}`));
+  const data = snap.val() || {};
+  return Object.values(data).sort((a,b) => a.time - b.time);
+}
+
+async function loadGameRankingPastor() {
+  const dateKey = document.getElementById('gameDate').value;
+  if (!dateKey) { showToast('날짜를 선택해주세요'); return; }
+  const el = document.getElementById('gameRankingPastor');
+  el.innerHTML = '<div class="empty-msg">불러오는 중...</div>';
+  try {
+    const records = await getGameRecords(dateKey);
+    if (records.length === 0) {
+      el.innerHTML = '<div class="empty-msg">해당 날짜 기록이 없어요</div>';
+      document.getElementById('gameRewardBtn').style.display = 'none';
+      return;
+    }
+    const medals = ['🥇','🥈','🥉'];
+    el.innerHTML = records.slice(0,10).map((r,i)=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="width:28px;font-size:14px">${medals[i]||`${i+1}`}</span>
+        <span style="flex:1;font-size:13px;font-weight:600">${r.name}</span>
+        <span style="font-size:13px;color:var(--primary);font-weight:700;font-family:monospace">${r.time.toFixed(2)}초</span>
+        ${r.accuracy ? `<span style="font-size:10px;color:#888">${r.accuracy}%</span>` : ''}
+      </div>
+    `).join('');
+    document.getElementById('gameRewardBtn').style.display = 'block';
+  } catch(e) {
+    console.error(e);
+    el.innerHTML = '<div class="empty-msg">조회 실패 ㅠㅠ</div>';
+  }
+}
+
+async function giveGameRewards() {
+  const dateKey = document.getElementById('gameDate').value;
+  if (!dateKey) return;
+  if (!confirm(`${dateKey} 게임 1/2/3등에게 데나리온을 지급할까요?\n🥇 1등: 10 데나리온\n🥈 2등: 5 데나리온\n🥉 3등: 3 데나리온`)) return;
+  showLoading(true);
+  try {
+    const records = await getGameRecords(dateKey);
+    const top3 = records.slice(0,3);
+    const rewards = [10, 5, 3];
+    for (let i=0; i<top3.length; i++) {
+      await apiPost({
+        name: top3[i].name,
+        actions: [{id:'game', name:`게임 ${i+1}등 보상`, coins:rewards[i]}],
+        totalCoins: rewards[i],
+        memo: `${dateKey} 말씀 타자 게임 ${i+1}등`,
+        photos: [],
+        manual: true
+      });
+      // 제출 후 바로 승인
+      const list = await getRequests(true);
+      const target = list.filter(r => r.name === top3[i].name && r.status === 'pending').pop();
+      if (target) await apiGet({ action:'approve', id:target.id });
+    }
+    clearCache();
+    showToast(`✅ ${top3.length}명에게 데나리온 지급 완료!`);
+    document.getElementById('gameRewardBtn').style.display = 'none';
+  } catch(e) {
+    console.error(e);
+    showToast('⚠️ 지급 실패');
+  }
+  finally { showLoading(false); }
+}
+
+async function manualCredit() {
+  const name = document.getElementById('manualName').value.trim();
+  const coins = parseInt(document.getElementById('manualCoins').value);
+  const memo = document.getElementById('manualMemo').value.trim();
+  if (!name) { showToast('이름을 입력해주세요!'); return; }
+  if (!coins || coins < 1) { showToast('데나리온 수를 입력해주세요!'); return; }
+  showLoading(true);
+  try {
+    await apiPost({
+      name,
+      actions: [{ id: 'manual', name: '수동 적립', coins }],
+      totalCoins: coins,
+      memo: memo || '목사님 수동 적립',
+      photos: [],
+      manual: true
+    });
+    // 바로 승인 처리
+    const list = await getRequests(true);
+    const target = list.filter(r => r.name === name && r.status === 'pending').pop();
+    if (target) await apiGet({ action: 'approve', id: target.id });
+    clearCache();
+    document.getElementById('manualName').value = '';
+    document.getElementById('manualCoins').value = '';
+    document.getElementById('manualMemo').value = '';
+    showToast(`✅ ${name}님에게 ${coins} 데나리온 적립 완료!`);
+    loadPastorPanel();
+  } catch(e) { showToast('⚠️ 적립 실패'); }
+  finally { showLoading(false); }
+}
+
+async function approveReq(id) {
+  // 낙관적 업데이트
+  if (cachedData) { const r=cachedData.find(x=>x.id===id); if(r) r.status='approved'; renderPastorPanel(cachedData); }
+  showToast('✅ 승인 완료!');
+  apiGet({action:'approve',id}).then(()=>{ clearCache(); }).catch(()=>{ clearCache(); loadPastorPanel(); showToast('⚠️ 오류가 발생했어요'); });
+}
+
+async function rejectReq(id) {
+  if (cachedData) { const r=cachedData.find(x=>x.id===id); if(r) r.status='rejected'; renderPastorPanel(cachedData); }
+  showToast('❌ 반려되었습니다');
+  apiGet({action:'reject',id}).then(()=>{ clearCache(); }).catch(()=>{ clearCache(); loadPastorPanel(); });
+}
+
+async function renameReq(id, currentName) {
+  const newName = prompt(`현재 이름: ${currentName}\n새 이름을 입력하세요:`);
+  if (!newName || newName.trim()==='' || newName.trim()===currentName) return;
+  showLoading(true);
+  try {
+    await apiGet({action:'rename',id,newName:newName.trim()});
+    clearCache(); showToast('✏️ 이름 수정: '+newName.trim()); loadPastorPanel();
+  } finally { showLoading(false); }
+}
+
+async function deleteReq(id) {
+  if (!confirm('이 항목을 완전히 삭제할까요?\n삭제하면 복구가 안 돼요!')) return;
+  if (cachedData) { cachedData=cachedData.filter(x=>x.id!==id); renderPastorPanel(cachedData); }
+  showToast('🗑️ 삭제되었습니다');
+  apiGet({action:'delete',id}).then(()=>{ clearCache(); }).catch(()=>{ clearCache(); loadPastorPanel(); });
+}
+
+// ── PASTOR AUTH ──
+function togglePastorMode() {
+  if (isPastor) {
+    isPastor = false;
+    document.getElementById('pastorStatus').textContent = '👤 청년 모드';
+    document.getElementById('pastorBtn').textContent = '목사님 로그인';
+    document.getElementById('pastorTab').style.display = 'none';
+    document.getElementById('statsTab').style.display = 'none';
+    document.getElementById('myTab').style.display = '';
+    showPage('submit'); showToast('로그아웃 되었습니다');
+  } else {
+    document.getElementById('pastorModal').classList.add('show');
+    setTimeout(()=>document.getElementById('pastorPwd').focus(),100);
+  }
+}
+function confirmPastorLogin() {
+  if (document.getElementById('pastorPwd').value === PASTOR_PASSWORD) {
+    isPastor = true;
+    sessionStorage.setItem('isPastor','true');
+    document.getElementById('pastorStatus').textContent = '⚙️ 목사님 모드';
+    document.getElementById('pastorBtn').textContent = '로그아웃';
+    document.getElementById('pastorTab').style.display = '';
+    document.getElementById('statsTab').style.display = '';
+    document.getElementById('myTab').style.display = 'none';
+    document.getElementById('pastorPwd').value = '';
+    closePastorModal(); showPage('pastor'); showToast('목사님 환영합니다! 🙏');
+  } else { showToast('비밀번호가 맞지 않습니다'); }
+}
+function closePastorModal() {
+  document.getElementById('pastorModal').classList.remove('show');
+  document.getElementById('pastorPwd').value = '';
+}
+document.getElementById('pastorPwd').addEventListener('keydown', e=>{
+  if (e.key==='Enter') confirmPastorLogin();
+  if (e.key==='Escape') closePastorModal();
+});
+
+function goPlaza() {
+  // 현재 목사님 모드 여부를 명확히 저장 후 이동
+  sessionStorage.setItem('isPastor', isPastor ? 'true' : 'false');
+  window.location.href = 'plaza.html';
+}
+
+// ── NAV ──
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const idx = {submit:0,my:1,ranking:2,stats:4,pastor:5}[name];
+  const tabs = document.querySelectorAll('.nav button');
+  if (tabs[idx]) tabs[idx].classList.add('active');
+  if (name==='ranking') loadRanking();
+  if (name==='pastor') loadPastorPanel();
+  if (name==='my') loadMyHistory();
+  if (name==='stats') loadStats();
+  // 다음 페이지 미리 로딩
+  setTimeout(prefetch, 500);
+}
+
+// ── TOAST ──
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+function statusLabel(s) { return {pending:'대기중',approved:'승인됨',rejected:'반려됨'}[s]||s; }
+
+// ── BOOT ──
+buildActionGrid();
+renderPhotos();
+// 앱 시작하자마자 백그라운드 미리 로딩
+setTimeout(prefetch, 1000);
+</script>
+</body>
+</html>
