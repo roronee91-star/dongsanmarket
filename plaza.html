@@ -66,11 +66,11 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .modal-bg { position: fixed; inset:0; background: rgba(0,0,0,0.78); z-index:200; display:flex; align-items:center; justify-content:center; }
 .modal { background: #fff; border: 3px solid #58c858; border-radius: 20px; padding: 22px; width: min(380px, 95vw); box-shadow: 0 8px 30px rgba(0,0,0,0.35); max-height: 92vh; overflow-y: auto; }
 .modal-title { font-size:17px; font-weight:900; color:#206820; text-align:center; margin-bottom:4px; }
-.modal-sub { font-size:11px; color:#888; text-align:center; margin-bottom:14px; }
+.modal-sub { font-size:11px; color:#888; text-align:center; margin-bottom:58px; }
 .name-input { width:100%; padding:11px; border:2px solid #c8e6c9; border-radius:10px; font-size:14px; font-family:inherit; background:#f9fff9; outline:none; margin-bottom:12px; text-align:center; }
 .name-input:focus { border-color:#58c858; }
 .char-section-title { font-size:11px; font-weight:700; color:#388e3c; margin-bottom:8px; }
-.char-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; justify-content:center; }
+.char-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:58px; justify-content:center; }
 .char-opt { width: calc(33% - 6px); border:2px solid #e0e0e0; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; background:#fafff9; transition:all 0.15s; padding:6px 4px; }
 .char-opt.wide { width: calc(25% - 6px); }
 .char-opt.pastor-only { border-color:#FFD700; background:#fffbf0; }
@@ -85,10 +85,10 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .game-modal { background: #1a1a2e; border: 3px solid #FFD700; border-radius: 20px; padding: 24px; width: min(420px, 95vw); box-shadow: 0 8px 30px rgba(0,0,0,0.5); max-height: 92vh; overflow-y: auto; }
 .game-title { font-size:18px; font-weight:900; color:#FFD700; text-align:center; margin-bottom:6px; }
 .game-sub { font-size:11px; color:#aaa; text-align:center; margin-bottom:16px; }
-.verse-box { background: #0d0d1a; border: 2px solid #FFD700; border-radius: 12px; padding: 16px; margin-bottom:14px; }
+.verse-box { background: #0d0d1a; border: 2px solid #FFD700; border-radius: 12px; padding: 16px; margin-bottom:58px; }
 .verse-ref { font-size:12px; color:#FFD700; font-weight:700; margin-bottom:8px; }
 .verse-text { font-size:15px; color:white; line-height:1.8; font-weight:500; letter-spacing:0.3px; }
-.game-input-area { display:none; margin-bottom:14px; }
+.game-input-area { display:none; margin-bottom:58px; }
 .game-input { width:100%; padding:12px; background:#0d0d1a; border:2px solid #58c858; border-radius:10px; color:white; font-size:14px; font-family:inherit; outline:none; line-height:1.6; resize:none; }
 .timer-display { font-size:28px; font-weight:900; color:#58c858; text-align:center; margin-bottom:12px; font-family:monospace; }
 .game-btn { width:100%; padding:13px; border:none; border-radius:12px; font-size:15px; font-weight:900; font-family:inherit; cursor:pointer; margin-bottom:8px; }
@@ -299,7 +299,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 <div class="chat-panel" id="chatPanel">
   <div class="chat-box" id="chatBox"></div>
 </div>
-
 <div class="chat-input-bar" id="chatInputBar">
   <input class="chat-input" id="chatInput" placeholder="메시지 입력..." maxlength="30" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChat();}">
   <button class="chat-send" onclick="sendChat()">▶</button>
@@ -453,11 +452,11 @@ document.addEventListener('click', e => {
 // ── 퀴즈 중 UI 토글 ──
 function setQuizMode(on) {
   document.getElementById('chatPanel').style.display = on ? 'none' : '';
-  document.getElementById('chatInputBar').style.display = on ? 'none' : '';
+  const cib = document.getElementById('chatInputBar'); if(cib) cib.style.display = on ? 'none' : '';
   document.getElementById('gameFloatBtn').style.display = on ? 'none' : (myName ? 'block' : 'none');
 }
 
-const isPastor = sessionStorage.getItem('isPastor') === 'true';
+const isPastor = localStorage.getItem('isPastor') === 'true';
 
 const SESSION_KEY = 'plaza_session';
 function saveSession(name, charId) { localStorage.setItem(SESSION_KEY, JSON.stringify({name, charId})); }
@@ -510,10 +509,6 @@ if (prev && prev.name && prev.charId) {
     document.body.appendChild(toast);
     selChar = foundChar;
     setTimeout(() => { toast.remove(); enterPlaza(); }, 1200);
-  } else {
-    // 세션 무효 - 초기화하고 모달 표시
-    localStorage.removeItem(SESSION_KEY);
-    document.getElementById('modal').style.display = 'flex';
   }
 }
 
@@ -539,10 +534,7 @@ window.leavePlaza = async function() {
   }
   window.location.href = 'index.html';
 };
-window.addEventListener('beforeunload', ()=>{ 
-  if(myRef) remove(myRef);
-  if(isPastor) remove(ref(db,'quiz'));
-});
+window.addEventListener('beforeunload', ()=>{ if(myRef) remove(myRef); if(isPastor) remove(ref(db,'quiz')); });
 
 function renderPlayer(id, name, emoji, x, y, isMe) {
   let el = document.getElementById('pl_'+id);
@@ -964,7 +956,8 @@ function showQuizQuestion(q, idx, startedAt) {
   document.getElementById('quizInput').value = '';
   document.getElementById('quizInput').disabled = false;
   // 제출 버튼 초기화
-  const qBtn1 = document.getElementById("quizSubmitBtn"); if (qBtn1) { qBtn1.textContent = '제출'; qBtn1.style.background = '#e04040'; }
+  const btn = document.getElementById('quizSubmitBtn');
+  if (btn) { btn.textContent = '제출'; btn.style.background = '#e04040'; }
   document.getElementById('quizTimerText').style.display = '';
   document.getElementById('quizTimerBar').parentElement.style.display = '';
   document.querySelectorAll('.quiz-ox-btn').forEach(b => b.className = 'quiz-ox-btn');
@@ -984,11 +977,11 @@ function showQuizQuestion(q, idx, startedAt) {
 
   clearInterval(quizState.timerInterval);
   const elapsed = (Date.now() - (startedAt || Date.now())) / 1000;
-  let timeLeft = Math.max(0, Math.ceil(7 - elapsed));
+  let timeLeft = Math.max(0, Math.ceil(10 - elapsed));
 
   const bar = document.getElementById('quizTimerBar');
   const txt = document.getElementById('quizTimerText');
-  bar.style.width = (timeLeft / 7 * 100) + '%';
+  bar.style.width = (timeLeft / 10 * 100) + '%';
   bar.className = 'quiz-timer-bar' + (timeLeft <= 3 ? ' warning' : '');
   txt.textContent = timeLeft + '초';
 
@@ -996,7 +989,7 @@ function showQuizQuestion(q, idx, startedAt) {
 
   quizState.timerInterval = setInterval(() => {
     timeLeft--;
-    bar.style.width = (timeLeft / 7 * 100) + '%';
+    bar.style.width = (timeLeft / 10 * 100) + '%';
     bar.className = 'quiz-timer-bar' + (timeLeft <= 3 ? ' warning' : '');
     txt.textContent = timeLeft + '초';
     if (timeLeft <= 0) {
@@ -1013,8 +1006,10 @@ function handleTimeout() {
   const inputVal = document.getElementById('quizInput').value.trim();
   const currentVal = quizState.myAnswer || inputVal || '(미입력)';
   quizState.myAnswer = currentVal;
+  document.getElementById('quizTimerText').textContent = currentVal === '(미입력)' ? '⏰ 시간초과!' : '제출완료!';
   document.getElementById('quizInput').disabled = true;
-  const qBtn2 = document.getElementById("quizSubmitBtn"); if (qBtn2) { qBtn2.textContent = currentVal === '(미입력)' ? '⏰' : '✅ 완료!'; qBtn2.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
+  const btn = document.getElementById('quizSubmitBtn');
+  if (btn) { btn.textContent = currentVal === '(미입력)' ? '⏰' : '✅'; btn.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
   showQuizBubble(myName, currentVal === '(미입력)' ? '⏰' : currentVal, currentVal === '(미입력)' ? 'wrong' : 'pending');
   saveMyAnswer(currentVal);
 }
@@ -1031,7 +1026,12 @@ window.submitQuizAns = function() {
   quizState.answered = true;
   quizState.myAnswer = val;
   document.getElementById('quizInput').disabled = true;
-  const qBtn3 = document.getElementById("quizSubmitBtn"); if(qBtn3){qBtn3.textContent='✅ 완료!';qBtn3.style.background='#58c858';}
+  const btn = document.getElementById('quizSubmitBtn');
+  btn.textContent = '✅ 완료!';
+  btn.style.background = '#58c858';
+  document.getElementById('quizTimerText').textContent = '제출완료!';
+  document.getElementById('quizTimerBar').style.width = '100%';
+  document.getElementById('quizTimerBar').className = 'quiz-timer-bar';
   showQuizBubble(myName, val, 'pending');
   saveMyAnswer(val);
 };
@@ -1165,6 +1165,7 @@ window.toggleQuizCtrl = function() {
 };
 
 window.startQuiz = async function() {
+  resetQuizState();
   const shuffled = [...QUIZ_BANK].sort(()=>Math.random()-0.5).slice(0,5);
   quizState.questions = shuffled;
   quizState.score = 0;
@@ -1182,7 +1183,7 @@ async function runNextQuestion(questions, idx) {
       await remove(ref(db,'quiz'));
       document.getElementById('quizCtrlStart').style.display = 'block';
       document.getElementById('quizCtrlStop').style.display = 'none';
-    }, 6000);
+    }, 7000);
     return;
   }
   await set(ref(db,'quiz'), {
@@ -1197,7 +1198,7 @@ async function runNextQuestion(questions, idx) {
       currentQ: questions[idx], answers, startedAt: Date.now()
     });
     setTimeout(() => runNextQuestion(questions, idx+1), 7000);
-  }, 7000);
+  }, 10000);
 }
 
 window.stopQuiz = async function() {
