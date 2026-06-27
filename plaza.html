@@ -964,8 +964,7 @@ function showQuizQuestion(q, idx, startedAt) {
   document.getElementById('quizInput').value = '';
   document.getElementById('quizInput').disabled = false;
   // 제출 버튼 초기화
-  const btn = document.getElementById('quizSubmitBtn');
-  if (btn) { btn.textContent = '제출'; btn.style.background = '#e04040'; }
+  const qBtn1 = document.getElementById("quizSubmitBtn"); if (qBtn1) { qBtn1.textContent = '제출'; qBtn1.style.background = '#e04040'; }
   document.getElementById('quizTimerText').style.display = '';
   document.getElementById('quizTimerBar').parentElement.style.display = '';
   document.querySelectorAll('.quiz-ox-btn').forEach(b => b.className = 'quiz-ox-btn');
@@ -1015,8 +1014,7 @@ function handleTimeout() {
   const currentVal = quizState.myAnswer || inputVal || '(미입력)';
   quizState.myAnswer = currentVal;
   document.getElementById('quizInput').disabled = true;
-  const btn = document.getElementById('quizSubmitBtn');
-  if (btn) { btn.textContent = currentVal === '(미입력)' ? '⏰' : '✅ 완료!'; btn.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
+  const qBtn2 = document.getElementById("quizSubmitBtn"); if (qBtn2) { qBtn2.textContent = currentVal === '(미입력)' ? '⏰' : '✅ 완료!'; qBtn2.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
   showQuizBubble(myName, currentVal === '(미입력)' ? '⏰' : currentVal, currentVal === '(미입력)' ? 'wrong' : 'pending');
   saveMyAnswer(currentVal);
 }
@@ -1033,13 +1031,7 @@ window.submitQuizAns = function() {
   quizState.answered = true;
   quizState.myAnswer = val;
   document.getElementById('quizInput').disabled = true;
-  const btn = document.getElementById('quizSubmitBtn');
-  btn.textContent = '✅ 완료!';
-  btn.style.background = '#58c858';
-  // 타이머는 계속 카운트다운 유지, 버튼만 완료로 변경
-  const btn = document.getElementById('quizSubmitBtn');
-  btn.textContent = '✅ 완료!';
-  btn.style.background = '#58c858';
+  const qBtn3 = document.getElementById("quizSubmitBtn"); if(qBtn3){qBtn3.textContent='✅ 완료!';qBtn3.style.background='#58c858';}
   showQuizBubble(myName, val, 'pending');
   saveMyAnswer(val);
 };
