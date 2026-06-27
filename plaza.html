@@ -456,7 +456,7 @@ function setQuizMode(on) {
   document.getElementById('gameFloatBtn').style.display = on ? 'none' : (myName ? 'block' : 'none');
 }
 
-const isPastor = localStorage.getItem('isPastor') === 'true';
+const isPastor = sessionStorage.getItem('isPastor') === 'true';
 
 const SESSION_KEY = 'plaza_session';
 function saveSession(name, charId) { localStorage.setItem(SESSION_KEY, JSON.stringify({name, charId})); }
