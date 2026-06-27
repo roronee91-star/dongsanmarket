@@ -1151,6 +1151,7 @@ function closeQuizUI() {
   setQuizMode(false);
   clearQuizBubbles();
   resetQuizState();
+  remove(ref(db,'quiz'));
 }
 
 window.closeQuizResult = function() {
