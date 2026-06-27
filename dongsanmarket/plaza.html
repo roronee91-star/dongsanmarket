@@ -36,8 +36,8 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .online-badge { background: #58c858; color: white; font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px; }
 .exit-btn { background: rgba(220,50,50,0.85); border: 1px solid rgba(255,100,100,0.5); color: white; padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit; }
 
-/* 접속자 */
-.users-panel { position: fixed; top:48px; left:8px; z-index:40; background: rgba(0,20,60,0.78); border: 1px solid #58c858; border-radius: 10px; padding: 7px 9px; min-width: 80px; max-width: 110px; }
+/* 접속자 드롭다운 */
+.users-panel { position: fixed; top: 36px; right: 8px; z-index:60; background: rgba(0,20,60,0.95); border: 1px solid #58c858; border-radius: 10px; padding: 7px 9px; min-width: 90px; max-width: 120px; display: none; }
 .users-title { font-size: 9px; color: #58c858; font-weight: 700; margin-bottom: 5px; }
 .user-item { font-size: 10px; color: #eee; display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
 .user-dot { width: 6px; height: 6px; background: #58c858; border-radius: 50%; flex-shrink: 0; }
@@ -48,19 +48,21 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .jbtn.pressed { background: rgba(88,200,88,0.6); }
 .jcenter { background: rgba(255,255,255,0.08); border-radius: 50%; }
 
-/* 채팅 */
-.chat-panel { position: fixed; top:50px; right:8px; z-index:50; width: min(360px, 32vw, calc(100vw - 110px)); }
-.chat-box { background: rgba(0,20,60,0.82); border: 2px solid #58c858; border-radius: 10px 10px 0 0; padding: 8px; height: clamp(100px, 18vh, 160px); overflow-y: scroll; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; }
+/* 채팅 메시지 박스 - 우측 상단 */
+.chat-panel { position: fixed; top:48px; right:8px; z-index:50; width: min(320px, 38vw, calc(100vw - 16px)); }
+.chat-box { background: rgba(0,20,60,0.82); border: 2px solid #58c858; border-radius: 10px; padding: 8px; height: clamp(80px, 15vh, 140px); overflow-y: scroll; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; display: flex; flex-direction: column; gap: 4px; }
 .chat-box::-webkit-scrollbar { width: 4px; }
 .chat-box::-webkit-scrollbar-thumb { background: #58c858; border-radius: 2px; }
 .chat-msg { font-size: 11px; line-height: 1.4; word-break: break-all; }
 .chat-msg .cn { color: #58c858; font-weight: 700; }
 .chat-msg .ct { color: #ddd; }
 .chat-msg.sys .ct { color: #FFD700; font-style: italic; }
-.chat-row { display: flex; border: 2px solid #58c858; border-top: none; border-radius: 0 0 10px 10px; overflow: hidden; background: rgba(0,20,60,0.9); }
-.chat-input { flex:1; min-width:0; background:none; border:none; color:white; font-size:12px; padding:7px 6px; font-family:inherit; outline:none; }
-.chat-input::placeholder { color:#445; }
-.chat-send { background:#58c858; border:none; color:white; font-size:12px; font-weight:700; padding:0 12px; cursor:pointer; flex-shrink:0; }
+
+/* 채팅 입력창 - 하단 고정 */
+.chat-input-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; display: flex; background: rgba(0,20,60,0.95); border-top: 2px solid #58c858; padding: 6px 10px; gap: 8px; align-items: center; }
+.chat-input { flex:1; min-width:0; background: rgba(255,255,255,0.1); border: 1px solid #58c858; border-radius: 8px; color:white; font-size:13px; padding: 7px 10px; font-family:inherit; outline:none; }
+.chat-input::placeholder { color:#667; }
+.chat-send { background:#58c858; border:none; color:white; font-size:13px; font-weight:700; padding: 7px 14px; border-radius: 8px; cursor:pointer; flex-shrink:0; }
 
 /* 모달 공통 */
 .modal-bg { position: fixed; inset:0; background: rgba(0,0,0,0.78); z-index:200; display:flex; align-items:center; justify-content:center; }
@@ -114,20 +116,19 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .popup-btn-yes { background:#58c858; color:white; }
 .popup-btn-no { background:rgba(255,255,255,0.1); color:#aaa; border:1px solid #444; }
 
-/* 게임 버튼 */
+/* 게임/퀴즈 버튼 - 좌측 상단 */
 .game-float-btn {
-  position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+  position: fixed; left: 8px; top: 56px;
   z-index: 50; background: linear-gradient(180deg, #4a90d9, #2060b0);
-  border: none; border-radius: 20px; padding: 10px 20px; color: white;
-  font-size: 13px; font-weight: 900; font-family: inherit;
+  border: none; border-radius: 14px; padding: 7px 14px; color: white;
+  font-size: 12px; font-weight: 900; font-family: inherit;
   cursor: pointer; box-shadow: 0 3px 0 #1a4080; display: none; white-space: nowrap;
 }
-/* 퀴즈 버튼 (목사님 전용) */
 .quiz-float-btn {
-  position: fixed; right: 14px; bottom: 20px; z-index: 50;
+  position: fixed; left: 8px; top: 92px; z-index: 50;
   background: linear-gradient(180deg, #e04040, #b02020);
-  border: none; border-radius: 20px; padding: 10px 16px; color: white;
-  font-size: 13px; font-weight: 900; font-family: inherit;
+  border: none; border-radius: 14px; padding: 7px 14px; color: white;
+  font-size: 12px; font-weight: 900; font-family: inherit;
   cursor: pointer; box-shadow: 0 3px 0 #801010; display: none; white-space: nowrap;
 }
 
@@ -246,7 +247,7 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 }
 /* 목사님 컨트롤 패널 */
 .quiz-master-ctrl {
-  position: fixed; bottom: 70px; right: 14px; z-index: 110;
+  position: fixed; top: 128px; left: 8px; z-index: 110;
   background: rgba(0,0,0,0.9); border: 2px solid #FFD700;
   border-radius: 14px; padding: 12px 16px;
   display: none; flex-direction: column; gap: 8px; min-width: 180px;
@@ -267,10 +268,10 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 <div class="bg"></div>
 
 <div class="top-bar">
-  <button class="back-btn" onclick="goBackToMarket()">← 마켓</button>
+  <button class="back-btn" onclick="goBackToMarket()">🪙 데나리온 적립하기</button>
   <div class="top-title">🏘️ 동산지기 광장</div>
   <div class="top-right">
-    <div class="online-badge" id="onlineBadge">● 0명</div>
+    <div class="online-badge" id="onlineBadge" onclick="toggleUsers()" style="cursor:pointer;">● 0명 ▾</div>
     <button class="exit-btn" onclick="leavePlaza()">🚪 나가기</button>
   </div>
 </div>
@@ -295,13 +296,15 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 <!-- 게임 버튼 -->
 <button class="game-float-btn" id="gameFloatBtn" onclick="showGamePopup()">📖 말씀 타자 게임</button>
 
-<!-- 채팅 -->
+<!-- 채팅 메시지 박스 - 우측 상단 -->
 <div class="chat-panel" id="chatPanel">
   <div class="chat-box" id="chatBox"></div>
-  <div class="chat-row">
-    <input class="chat-input" id="chatInput" placeholder="메시지..." maxlength="30" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChat();}">
-    <button class="chat-send" onclick="sendChat()">▶</button>
-  </div>
+</div>
+
+<!-- 채팅 입력창 - 하단 고정 -->
+<div class="chat-input-bar" id="chatInputBar">
+  <input class="chat-input" id="chatInput" placeholder="메시지 입력..." maxlength="30" onkeydown="if(event.key==='Enter'){event.preventDefault();sendChat();}">
+  <button class="chat-send" onclick="sendChat()">▶</button>
 </div>
 
 <!-- ── 퀴즈 상단 카드 (배경 안 덮음) ── -->
@@ -435,10 +438,24 @@ applyBackground();
 setInterval(applyBackground, 60000);
 window.addEventListener('resize', applyBackground);
 
+// ── 접속자 토글 ──
+window.toggleUsers = function() {
+  const panel = document.getElementById('usersPanel');
+  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+};
+// 외부 클릭 시 닫기
+document.addEventListener('click', e => {
+  const badge = document.getElementById('onlineBadge');
+  const panel = document.getElementById('usersPanel');
+  if (badge && panel && !badge.contains(e.target) && !panel.contains(e.target)) {
+    panel.style.display = 'none';
+  }
+});
+
 // ── 퀴즈 중 UI 토글 ──
 function setQuizMode(on) {
-  document.getElementById('usersPanel').style.display = on ? 'none' : '';
   document.getElementById('chatPanel').style.display = on ? 'none' : '';
+  document.getElementById('chatInputBar').style.display = on ? 'none' : '';
   document.getElementById('gameFloatBtn').style.display = on ? 'none' : (myName ? 'block' : 'none');
 }
 
