@@ -135,7 +135,6 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .quiz-top-card {
   position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
   z-index: 80; width: min(460px, 96vw);
-  max-height: calc(100vh - 60px); overflow-y: auto;
   display: none;
 }
 .quiz-card {
@@ -851,8 +850,9 @@ window.closeGamePopup = function() { document.getElementById('gamePopup').style.
 window.closeGame = function() { clearInterval(gameTimer); document.getElementById('gameModal').style.display='none'; };
 
 // ══════════════════════════════════
-// ── 성경 퀴즈 시스템 ──
+// ── 성경 퀴즈 시스템 (완전 재작성) ──
 // ══════════════════════════════════
+
 const QUIZ_BANK = [
   {type:'ox', q:'다윗은 골리앗을 물매돌로 쓰러뜨렸다', a:'O'},
   {type:'ox', q:'노아의 방주에는 동물이 암수 각 2마리씩 탔다', a:'O'},
@@ -880,12 +880,12 @@ const QUIZ_BANK = [
   {type:'short', q:'오병이어 기적에서 사용된 빵의 수는? (숫자)', a:'5'},
 ];
 
+// 퀴즈 상태
 let quizState = {
   active: false, qIdx: 0, questions: [],
   myAnswer: null, answered: false,
   score: 0, history: [],
-  revealedIdx: -1,
-  resultShown: false,
+  revealedIdx: -1, resultShown: false,
   timerInterval: null, listenerUnsubscribe: null,
 };
 
@@ -895,13 +895,13 @@ function resetQuizState() {
     active: false, qIdx: 0, questions: [],
     myAnswer: null, answered: false,
     score: 0, history: [],
-    revealedIdx: -1,
-    resultShown: false,
+    revealedIdx: -1, resultShown: false,
     timerInterval: null,
     listenerUnsubscribe: quizState.listenerUnsubscribe,
   };
 }
 
+// Firebase 퀴즈 리스너
 function initQuizListener() {
   if (quizState.listenerUnsubscribe) return;
   quizState.listenerUnsubscribe = onValue(ref(db, 'quiz'), snap => {
@@ -922,7 +922,6 @@ function handleQuizState(data) {
   if (data.status === 'waiting') {
     showQuizWaiting();
   } else if (data.status === 'question') {
-    const q = data.currentQ;
     const idx = data.qIdx || 0;
     if (quizState.active && quizState.qIdx === idx && quizState.answered) return;
     quizState.active = true;
@@ -930,7 +929,7 @@ function handleQuizState(data) {
     quizState.answered = false;
     quizState.myAnswer = null;
     clearQuizBubbles();
-    showQuizQuestion(q, idx, data.startedAt);
+    showQuizQuestion(data.currentQ, idx, data.startedAt);
   } else if (data.status === 'reveal') {
     showQuizReveal(data.currentQ, data.answers || {});
   } else if (data.status === 'finished') {
@@ -947,22 +946,24 @@ function showQuizQuestion(q, idx, startedAt) {
   document.getElementById('quizWaitCard').style.display = 'none';
   document.getElementById('quizQCard').style.display = 'block';
   document.getElementById('quizReveal').style.display = 'none';
-
   document.getElementById('quizBadge').textContent = `문제 ${idx+1} / 5`;
   document.getElementById('quizQuestion').textContent = q.q;
 
+  // 입력 영역 초기화
   document.getElementById('quizInputRow').style.display = 'none';
   document.getElementById('quizOxRow').style.display = 'none';
   document.getElementById('quizChoicesGrid').style.display = 'none';
   document.getElementById('quizInput').value = '';
   document.getElementById('quizInput').disabled = false;
-  // 제출 버튼 초기화
-  const qsb1 = document.getElementById('quizSubmitBtn');
-  if (qsb1) { qsb1.textContent = '제출'; submitBtn1.style.background = '#e04040'; }
+  document.querySelectorAll('.quiz-ox-btn').forEach(b => b.className = 'quiz-ox-btn');
   document.getElementById('quizTimerText').style.display = '';
   document.getElementById('quizTimerBar').parentElement.style.display = '';
-  document.querySelectorAll('.quiz-ox-btn').forEach(b => b.className = 'quiz-ox-btn');
 
+  // 제출 버튼 초기화
+  const sb = document.getElementById('quizSubmitBtn');
+  if (sb) { sb.textContent = '제출'; sb.style.background = '#e04040'; }
+
+  // 문제 유형별 입력 표시
   if (q.type === 'blank' || q.type === 'short') {
     document.getElementById('quizInputRow').style.display = 'flex';
     setTimeout(() => document.getElementById('quizInput').focus(), 100);
@@ -972,22 +973,20 @@ function showQuizQuestion(q, idx, startedAt) {
     const grid = document.getElementById('quizChoicesGrid');
     grid.style.display = 'grid';
     grid.innerHTML = q.choices.map(c =>
-      `<button class="quiz-choice-btn" onclick="pickChoice('${c.replace(/'/g,"\\'")}')">${c}</button>`
+      `<button class="quiz-choice-btn" onclick="pickChoice('${c.replace(/'/g,"\'")}' )">${c}</button>`
     ).join('');
   }
 
+  // 타이머
   clearInterval(quizState.timerInterval);
   const elapsed = (Date.now() - (startedAt || Date.now())) / 1000;
   let timeLeft = Math.max(0, Math.ceil(7 - elapsed));
-
   const bar = document.getElementById('quizTimerBar');
   const txt = document.getElementById('quizTimerText');
   bar.style.width = (timeLeft / 7 * 100) + '%';
   bar.className = 'quiz-timer-bar' + (timeLeft <= 3 ? ' warning' : '');
   txt.textContent = timeLeft + '초';
-
   if (timeLeft <= 0) { handleTimeout(); return; }
-
   quizState.timerInterval = setInterval(() => {
     timeLeft--;
     bar.style.width = (timeLeft / 7 * 100) + '%';
@@ -1003,14 +1002,12 @@ function showQuizQuestion(q, idx, startedAt) {
 function handleTimeout() {
   if (quizState.answered) return;
   quizState.answered = true;
-  // 선택/입력된 값이 있으면 그걸로, 없으면 미입력
   const inputVal = document.getElementById('quizInput').value.trim();
   const currentVal = quizState.myAnswer || inputVal || '(미입력)';
   quizState.myAnswer = currentVal;
-  // 타이머 텍스트 유지
   document.getElementById('quizInput').disabled = true;
-  const qsb2 = document.getElementById('quizSubmitBtn');
-  if (qsb2) { qsb2.textContent = currentVal === '(미입력)' ? '⏰' : '✅'; qsb2.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
+  const sb = document.getElementById('quizSubmitBtn');
+  if (sb) { sb.textContent = currentVal === '(미입력)' ? '⏰' : '✅'; sb.style.background = currentVal === '(미입력)' ? '#aaa' : '#58c858'; }
   showQuizBubble(myName, currentVal === '(미입력)' ? '⏰' : currentVal, currentVal === '(미입력)' ? 'wrong' : 'pending');
   saveMyAnswer(currentVal);
 }
@@ -1023,31 +1020,24 @@ window.submitQuizAns = function() {
   if (quizState.answered) return;
   const val = document.getElementById('quizInput').value.trim();
   if (!val) return;
-  clearInterval(quizState.timerInterval);
   quizState.answered = true;
   quizState.myAnswer = val;
   document.getElementById('quizInput').disabled = true;
-  const qsb3 = document.getElementById('quizSubmitBtn');
-  qsb3.textContent = '✅ 완료!';
-  qsb3.style.background = '#58c858';
-  // 타이머 텍스트 유지
-  document.getElementById('quizTimerBar').style.width = '100%';
-  document.getElementById('quizTimerBar').className = 'quiz-timer-bar';
+  const sb = document.getElementById('quizSubmitBtn');
+  if (sb) { sb.textContent = '✅ 완료!'; sb.style.background = '#58c858'; }
   showQuizBubble(myName, val, 'pending');
   saveMyAnswer(val);
 };
 
 window.pickOX = function(val) {
   if (quizState.answered) return;
-  // 선택만 표시, 잠금 안함 (타이머 끝나면 자동제출)
   quizState.myAnswer = val;
-  document.getElementById('quizOX_O').className = 'quiz-ox-btn' + (val==='O'?' sel-o':'');
-  document.getElementById('quizOX_X').className = 'quiz-ox-btn' + (val==='X'?' sel-x':'');
+  document.getElementById('quizOX_O').className = 'quiz-ox-btn' + (val==='O' ? ' sel-o' : '');
+  document.getElementById('quizOX_X').className = 'quiz-ox-btn' + (val==='X' ? ' sel-x' : '');
 };
 
 window.pickChoice = function(val) {
   if (quizState.answered) return;
-  // 선택만 표시, 잠금 안함 (타이머 끝나면 자동제출)
   quizState.myAnswer = val;
   document.querySelectorAll('.quiz-choice-btn').forEach(b => {
     b.className = 'quiz-choice-btn' + (b.textContent === val ? ' selected' : '');
@@ -1056,8 +1046,6 @@ window.pickChoice = function(val) {
 
 function showQuizReveal(q, answers) {
   clearInterval(quizState.timerInterval);
-
-  // 이미 이 문제 reveal 처리했으면 스킵 (중복 방지)
   if (quizState.revealedIdx === quizState.qIdx) return;
   quizState.revealedIdx = quizState.qIdx;
 
@@ -1085,11 +1073,9 @@ function showQuizReveal(q, answers) {
     meEl.textContent = `❌ 오답 (내 답: ${myAns})`; meEl.className = 'quiz-reveal-me wrong';
   }
 
-  // 모든 유저 말풍선 정답/오답으로 업데이트
+  // 말풍선
   Object.entries(answers).forEach(([nameKey, ans]) => {
-    const realName = nameKey.replace(/_/g, ' ');
     const isRight = ans.trim() === correct.trim();
-    // Firebase key에서 원래 이름 찾기 (plaza 데이터 기준)
     document.querySelectorAll('.player').forEach(el => {
       const nameEl = el.querySelector('.player-name');
       const pName = el.id === 'pl_'+myId ? myName : (nameEl ? nameEl.textContent.trim() : '');
@@ -1105,9 +1091,9 @@ function showQuizReveal(q, answers) {
 
 function showQuizFinalResult() {
   clearInterval(quizState.timerInterval);
-  // 이미 결과 표시했으면 스킵 (중복 방지)
   if (quizState.resultShown) return;
   quizState.resultShown = true;
+
   document.getElementById('quizTopCard').style.display = 'none';
   document.getElementById('quizResultModal').style.display = 'flex';
   document.getElementById('quizResultScore').textContent = quizState.score;
@@ -1123,6 +1109,7 @@ function showQuizFinalResult() {
   setQuizMode(false);
   clearQuizBubbles();
 
+  // 데나리온 적립
   if (quizState.score > 0 && myName) {
     const GAS = 'https://script.google.com/macros/s/AKfycbxoVhMwEQuxXsQX_8GzzucY6LJggktnZW7SKfXXf23DGiJVzzdJb-1Za0zatedIbW6e/exec';
     const form = new FormData();
@@ -1135,12 +1122,12 @@ function showQuizFinalResult() {
     }));
     fetch(GAS, {method:'POST', body:form})
       .then(r=>r.json())
-      .then(async ()=>{
+      .then(async () => {
         const listRes = await fetch(`${GAS}?action=getAll`);
         const listData = await listRes.json();
         const myPending = (listData.requests||[])
-          .filter(r=> r.name===myName && r.status==='pending')
-          .sort((a,b)=> b.submittedAt - a.submittedAt);
+          .filter(r => r.name===myName && r.status==='pending')
+          .sort((a,b) => b.submittedAt - a.submittedAt);
         if (myPending.length > 0) await fetch(`${GAS}?action=approve&id=${myPending[0].id}`);
       })
       .catch(()=>{});
@@ -1152,12 +1139,10 @@ function closeQuizUI() {
   setQuizMode(false);
   clearQuizBubbles();
   resetQuizState();
-  remove(ref(db,'quiz'));
 }
 
 window.closeQuizResult = function() {
   document.getElementById('quizResultModal').style.display = 'none';
-  remove(ref(db,'quiz'));
   resetQuizState();
 };
 
@@ -1170,8 +1155,6 @@ window.startQuiz = async function() {
   resetQuizState();
   const shuffled = [...QUIZ_BANK].sort(()=>Math.random()-0.5).slice(0,5);
   quizState.questions = shuffled;
-  quizState.score = 0;
-  quizState.history = [];
   await set(ref(db,'quiz'), { status:'waiting', startedAt: Date.now() });
   document.getElementById('quizCtrlStart').style.display = 'none';
   document.getElementById('quizCtrlStop').style.display = 'block';
@@ -1185,7 +1168,7 @@ async function runNextQuestion(questions, idx) {
       await remove(ref(db,'quiz'));
       document.getElementById('quizCtrlStart').style.display = 'block';
       document.getElementById('quizCtrlStop').style.display = 'none';
-    }, 7000);
+    }, 6000);
     return;
   }
   await set(ref(db,'quiz'), {
@@ -1210,8 +1193,7 @@ window.stopQuiz = async function() {
   document.getElementById('quizMasterCtrl').style.display = 'none';
   closeQuizUI();
   resetQuizState();
-};
-
+}
 // ── 채팅 1시간 자동 초기화 ──
 async function cleanOldChats() {
   const snap = await get(ref(db,'chat'));
