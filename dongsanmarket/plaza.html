@@ -906,7 +906,7 @@ function initQuizListener() {
   quizState.listenerUnsubscribe = onValue(ref(db, 'quiz'), snap => {
     const data = snap.val();
     if (!data || !data.status) {
-      if (quizState.active) closeQuizUI();
+      closeQuizUI();
       return;
     }
     handleQuizState(data);
