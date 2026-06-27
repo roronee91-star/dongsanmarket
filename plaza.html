@@ -459,11 +459,11 @@ function setQuizMode(on) {
   document.getElementById('gameFloatBtn').style.display = on ? 'none' : (myName ? 'block' : 'none');
 }
 
-const isPastor = sessionStorage.getItem('isPastor') === 'true';
+const isPastor = localStorage.getItem('isPastor') === 'true';
 
 const SESSION_KEY = 'plaza_session';
-function saveSession(name, charId) { sessionStorage.setItem(SESSION_KEY, JSON.stringify({name, charId})); }
-function loadSession() { try { return JSON.parse(sessionStorage.getItem(SESSION_KEY)); } catch { return null; } }
+function saveSession(name, charId) { localStorage.setItem(SESSION_KEY, JSON.stringify({name, charId})); }
+function loadSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch { return null; } }
 
 const CHARS = [
   {id:'char1', img:'char1.png', n:'기본청년'},
@@ -530,7 +530,7 @@ window.goBackToMarket = function() {
 };
 
 window.leavePlaza = async function() {
-  sessionStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_KEY);
   if (myRef) {
     await push(ref(db,'chat'), {system:true, text:`👤 ${myName}님이 퇴장했어요.`, t:Date.now()});
     await remove(myRef);
