@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>엘리암 성경 배틀</title>
+<style>
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html,body { margin:0; padding:0; height:100%; overflow:hidden;
+  background:#1a1a2e; font-family:'Segoe UI','Malgun Gothic',sans-serif; color:#fff;
+  user-select:none; }
+#wrap { position:relative; width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center; }
+canvas { display:block; width:100%; height:auto; aspect-ratio:800/400;
+  max-height:100%; image-rendering:pixelated; }
+
+/* HUD */
+#hud { position:absolute; top:8px; left:8px; font-size:12px; z-index:10; pointer-events:none; }
+.barbg { width:150px; height:13px; background:rgba(0,0,0,.55); border:1px solid rgba(255,255,255,.7);
+  border-radius:4px; overflow:hidden; margin-bottom:5px; }
+.barfill { height:100%; transition:width .15s; }
+#hpFill { background:#E8483F; width:100%; }
+#expFill { background:#58c858; width:0%; }
+#gaugeFill { background:#FFC93C; width:0%; }
+.barlabel { font-size:10px; opacity:.85; margin-bottom:1px; text-shadow:0 1px 2px #000; }
+#lvBadge { display:inline-block; background:#FFC93C; color:#3a2a00; font-weight:800;
+  padding:2px 8px; border-radius:10px; font-size:12px; margin-bottom:5px; }
+
+#topRight { position:absolute; top:8px; right:8px; z-index:10; display:flex; gap:6px; }
+.tbtn { background:rgba(0,0,0,.6); border:1px solid rgba(255,255,255,.5); color:#fff;
+  padding:7px 11px; border-radius:8px; font-size:12px; cursor:pointer; }
+.tbtn:active { background:rgba(255,255,255,.2); }
+
+#bossWrap { position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  width:min(340px,70%); display:none; z-index:9; }
+#bossName { text-align:center; font-size:12px; font-weight:700; text-shadow:0 1px 3px #000; margin-bottom:2px; }
+#bossBar { width:100%; height:11px; background:rgba(0,0,0,.6); border:1px solid #fff;
+  border-radius:4px; overflow:hidden; }
+#bossFill { height:100%; background:#A93226; width:100%; transition:width .15s; }
+
+#waveTag { position:absolute; bottom:10px; left:10px; z-index:10; font-size:12px;
+  background:rgba(0,0,0,.55); padding:5px 10px; border-radius:8px; }
+#onlineTag { position:absolute; bottom:10px; left:50%; transform:translateX(-50%); z-index:10;
+  font-size:11px; background:rgba(0,0,0,.55); padding:5px 10px; border-radius:8px; }
+
+/* 모바일 조작 */
+#pad { position:absolute; bottom:16px; left:12px; z-index:20; display:flex; gap:8px; }
+#acts { position:absolute; bottom:16px; right:12px; z-index:20; display:flex; gap:8px; }
+.ctrl { width:56px; height:56px; border-radius:50%; background:rgba(255,255,255,.16);
+  border:2px solid rgba(255,255,255,.55); display:flex; align-items:center; justify-content:center;
+  font-size:19px; font-weight:800; color:#fff; touch-action:none; }
+.ctrl:active,.ctrl.pressed { background:rgba(255,255,255,.4); }
+.ctrl small { font-size:9px; display:block; opacity:.9; }
+.ctrl.cool { opacity:.35; }
+
+/* 오버레이 */
+#ov { position:absolute; inset:0; background:rgba(0,0,0,.8); z-index:50;
+  display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; }
+#ov h2 { color:#FFC93C; margin:0 0 8px; font-size:22px; }
+#ov p { margin:4px 0; font-size:14px; line-height:1.6; }
+#ov button { margin-top:16px; padding:12px 28px; font-size:15px; font-weight:800;
+  background:#E8483F; color:#fff; border:none; border-radius:10px; }
+#ov .sub { background:#444; margin-left:8px; }
+
+/* 레벨업 토스트 */
+#lvup { position:absolute; top:38%; left:50%; transform:translate(-50%,-50%);
+  font-size:30px; font-weight:900; color:#FFC93C; text-shadow:0 3px 10px #000;
+  display:none; z-index:40; pointer-events:none; }
+
+/* 랭킹 */
+#rankModal { position:absolute; inset:0; background:rgba(0,0,0,.85); z-index:60;
+  display:none; align-items:center; justify-content:center; padding:20px; }
+#rankBox { background:#232342; border:2px solid #FFC93C; border-radius:14px;
+  padding:18px; width:min(380px,100%); max-height:80%; overflow-y:auto; }
+#rankBox h3 { margin:0 0 12px; color:#FFC93C; font-size:16px; text-align:center; }
+.rrow { display:flex; align-items:center; gap:8px; padding:7px 4px;
+  border-bottom:1px solid rgba(255,255,255,.12); font-size:13px; }
+.rrow.me { background:rgba(255,201,60,.16); border-radius:6px; }
+.rnum { width:26px; text-align:center; font-weight:800; }
+.rname { flex:1; }
+.rval { color:#FFC93C; font-weight:700; font-size:12px; }
+#rankBox button { width:100%; margin-top:12px; padding:10px; background:#E8483F;
+  border:none; border-radius:8px; color:#fff; font-weight:700; font-size:14px; }
+#loadingMsg { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  background:#1a1a2e; z-index:80; font-size:14px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+
+  <div id="hud">
+    <div id="lvBadge">Lv.1</div>
+    <div class="barlabel">❤️ 체력</div>
+    <div class="barbg"><div id="hpFill" class="barfill"></div></div>
+    <div class="barlabel">⭐ 경험치</div>
+    <div class="barbg"><div id="expFill" class="barfill"></div></div>
+    <div class="barlabel">✨ 필살기</div>
+    <div class="barbg"><div id="gaugeFill" class="barfill"></div></div>
+  </div>
+
+  <div id="topRight">
+    <div class="tbtn" onclick="openRank()">🏆 랭킹</div>
+    <div class="tbtn" onclick="goPlaza()">🏛️ 광장</div>
+  </div>
+
+  <div id="bossWrap"><div id="bossName">골리앗</div>
+    <div id="bossBar"><div id="bossFill"></div></div></div>
+
+  <div id="waveTag">Wave 1 / 3</div>
+  <div id="onlineTag">● 1명 접속</div>
+  <div id="lvup"></div>
+
+  <div id="pad">
+    <div class="ctrl" id="btnLeft">◀</div>
+    <div class="ctrl" id="btnRight">▶</div>
+  </div>
+  <div id="acts">
+    <div class="ctrl" id="btnSkill">🎺<small>X</small></div>
+    <div class="ctrl" id="btnUlt">🌊<small>C</small></div>
+    <div class="ctrl" id="btnAtk">🪨<small>Z</small></div>
+    <div class="ctrl" id="btnJump">⬆<small>점프</small></div>
+  </div>
+
+  <div id="ov">
+    <h2 id="ovTitle"></h2>
+    <p id="ovDesc"></p>
+    <div>
+      <button id="ovBtn">다시 도전</button>
+      <button class="sub" onclick="goPlaza()">광장으로</button>
+    </div>
+  </div>
+
+  <div id="rankModal">
+    <div id="rankBox">
+      <h3>🏆 레벨 랭킹</h3>
+      <div id="rankList">불러오는 중...</div>
+      <button onclick="closeRank()">닫기</button>
+    </div>
+  </div>
+
+  <div id="loadingMsg">불러오는 중...</div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, set, get, remove, onValue, onDisconnect }
+  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD3YZHM-GRqEQDQIR9shFQ7bZMhsBjB-NQ",
+  authDomain: "talentmarket-7e480.firebaseapp.com",
+  databaseURL: "https://talentmarket-7e480-default-rtdb.firebaseio.com",
+  projectId: "talentmarket-7e480",
+  storageBucket: "talentmarket-7e480.firebasestorage.app",
+  messagingSenderId: "1007328330532",
+  appId: "1:1007328330532:web:eae693dd7ff0a6bf33a9b1"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ══ 세션 (plaza.html과 동일 키 사용) ══
+const SESSION_KEY = 'plaza_session';
+let session = null;
+try { session = JSON.parse(localStorage.getItem(SESSION_KEY)); } catch {}
+if (!session || !session.name || !session.charId) {
+  alert('먼저 광장에 입장해주세요!');
+  location.href = 'plaza.html';
+}
+const myName = session.name;
+const myCharImg = session.charId + '.png';
+const safeName = myName.replace(/[.#$/[\]]/g, '_');
+const myId = 'b_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+const ROOM = 'room1';
+
+// ══ 스프라이트 로드 ══
+const SPR = {
+  babel:   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAAE4CAYAAABlmX7/AAAE90lEQVR4nO3cIWtddxjA4aRcPSoiIsqV+xCjRHRfYFSMUTExVUYoo6KqsmpqjEvZJ5goo5T5TZRR0Y8RKiIi+g1SMdOIhpytJ//zy3kefW7ywr0/XvNy9ve41Pbw4Hz0DGt2cnq2P3qGJbs1egDgvxMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCNqMHuG5Tb5uPvvxirlG4gtd7e5O+r7XdTtvAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCEre4Weqpnj74fPcKqHR3vRo+waDYwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhm9EDrN3XPz2f9Pxfv/w40yT/Wto8XM4GhjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhzC30YEu7JV7aPFzOBoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIWx/9ADXbXt4cD56ho+93h2PHuF/OTrejR7hgpPTs1X9pm1gCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCZr8bXdrt8e/Pvhk9AjN68PTV6BEumPs22waGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFs8p3m1Nvmpb33+N37d6NHYEZ3bt8ZPcIFU9+bPfV22gaGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwjajB7huL17+M3oEZvT4h+9Gj3CtbGAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMI228OD8ykfeHRvO+kf/PHyz0nPA1dnA0OYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAELa690J/e//u6BHgs7GBIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIW90tNDfb0fFu9AgXnJye7c/5921gCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCVncL/eDpq0nP//zwq3kG4Uqe/PZm0vNz3x4vjQ0MYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUPYZurt6K9/753PNQwwjQ0MYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUPY5PdC19+7uz08cMvNjWEDQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhAkYwgQMYQKGMAFDmIAhTMAQJmAIEzCECRjCBAxhAoYwAUOYgCFMwBAmYAgTMIQJGMIEDGGb0QMs3e7F29EjwCfZwBAmYAgTMIQJGMIEDGEChjABQ5iAIUzAECZgCBMwhH0Au8hPQ2LuU44AAAAASUVORK5CYII=",
+  soldier: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAE4CAYAAACnjG1SAAAFbUlEQVR4nO3dMWudVRzA4RvJ2EkyZEo6dJAO+gkMNQqOgrt7kTs4dsqQqaPCRbq7C4IIDsZSP4EO4uDSTEGCk6MYB6cMv8KhPb1vzPPM5577J7z8OMM9eXdWt8zB/t7VyPrD4/WsUZjg+dlm6v7f//jT1P1Hffjeu0Przy8ud0bWvzG0O3CrCASQBAJIAgEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCANPQ/8v8PRt+L8fybt2aNwgSHH/02tH70PRGjz8+jk9OheR6fngytH51/lBMEkAQCSAIBJIEAkkAASSCAJBBAEgggCQSQBAJIAgGk3W0P8LJGfxt/eLwe2v/oi6Hlq68+HlvPi33y9dj6w+MPxj5wthl6fm4bJwggCQSQBAJIAgEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCAdOPfi3HbvP/Zl0Prf/j800mT/Gdp8/BqOUEASSCAJBBAEgggCQSQBAJIAgEkgQCSQABJIIAkEEByF+OGWdpdhqXNw6vlBAEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCAJBBAEgggCQSQBAJIAgEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAGl32wO8rPOLy52hD5xtriaNslqtVqujs7H1zzbrOYMs1NF6s+0Rrhl9fg7296Y+P0vjBAEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAGn6XYyl/Xb96ZO72x7hmn9W3257hNdqaX//Bw9Xi3o+l8YJAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEA0vBdjNG7FUt778Ntu/vAi81+Pr/7Y+r20zlBAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCAJBBAmv5eDF6tX3//a9sjXHP/3p1tj8BEThBAEgggCQSQBAJIAgEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCAJBBAEgggCQSQBAJIAgEkgQCSQABJIIAkEEASCCAJBJB2tz0AY+7fu7PtEbhFnCCAJBBAEgggCQSQBAJIAgEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEA0vB7Mc4vLndG1h+tN1ej3zHT0yd3tz0CC3K03kzd/9HJ6dT9Z3OCAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCANHwXY9To3Y3ZHjxcDd0N+eXnZ7NGYYK33zkaWj/6fB7s7y3qbtFsThBAEgggCQSQBAJIAgEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCAJBBAEgggCQSQBAJIAgEkgQCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAAaXfbA8BNcn5xuTOy/vHpydXM/WdzggCSQABJIIAkEEASCCAJBJAEAkgCASSBAJJAAEkggOQuBky0tLsVo5wggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCAJBBAEggg3ejfib8OB/t7Q+81OHhzWddbzv/8e2j9TZ//pt99WBonCCAJBJAEAkgCASSBAJJAAEkggCQQQBIIIAkEkAQCSAIBJIEAkkAASSCAJBBAEgggCQSQBAJIAgEkgQCSQABJIID0LyavdQov8NGCAAAAAElFTkSuQmCC",
+  goliath: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQQAAAFUCAYAAADChkL9AAAFmklEQVR4nO3dMWudZRiA4RPJEDKGDBlKkJJBIoJ0cHJzdREqSCd/gZubo5uD0F/gVMQGXFzddHESqx2kiIYOQULGksm43Sik+rbnS76T5Lrml/M9bU9v3uHhO2sLrqTdne2zkXM/vPn6pM9968dfhs4dHh2vTfpgLsUrcw8ArA5BACIIQAQBiCAAEQQgggBEEIAIAhDbZCtmrg3EqdlovJrcEIAIAhBBACIIQAQBiCAAEQQgggBEEICszz3AVTe6Wcj5pv77s/m4HDcEIIIARBCACAIQQQAiCEAEAYggABEEILa6nmN0g+7+x+9c9Ci8gI8++3bonI3G87khABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggAFmfe4Cr7skff849AtfQ7s722ZSfd3h0vDZyzg0BiCAAEQQgggBEEIAIAhBBACIIQAQBiE1FuESjG4hfPPh60ud+eO+9oee6IQARBCCCAEQQgAgCEEEAIghABAGIIACxqfgco++gu//Vo6ENsAeffLDcQDfcvU+/HDo3+u/G+dwQgAgCEEEAIghABAGIIAARBCCCAEQQgAgCEEEAIghABAGIIAARBCCCAEQQgAgCEEEAMts7FUd/BRdehO/VctwQgAgCEEEAIghABAGIIAARBCCCAEQQgEy+qTi6Kba18+rUj57FydHvk37e3jePJv28J+++Mennrfp81+V7NRc3BCCCAEQQgAgCEEEAIghABAGIIAARBCCzvVOR8029uTe1VZ+P5bghABEEIIIARBCACAIQQQAiCEAEAYggALGpeEl++vXp3CPA/3JDACIIQAQBiCAAEQQgggBEEIAIAhBBACIIQAQBiCAAEQQgggBEEIAIAhBBACIIQAQByLV5p+LW1tZKP/fg52cXPMn1trd/Z+4R/tPJycncI0zCDQGIIAARBCCCAEQQgAgCEEEAIghABAHI8Kbi7s722ci5W7f3X34auKI2NzfnHmESbghABAGIIAARBCCCAEQQgAgCEEEAIghArs07Fa+Lu3ffn3uES3Vw8HDuEfgHNwQgggBEEIAIAhBBACIIQAQBiCAAEQQgggBEEIAIAhBBACIIQAQBiCAAEQQgggBEEIAIAhBBACIIQAQBiCAAEQQgggBEEIAIAhBBACIIQAQBiCAAEQQgggBEEIAIAhBBACIIQAQByPrcA/BvBwcP5x6BG8wNAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIGujB3d3ts9Gzt26vf/y0yxhY2NjlufCYrFYnJ6eDp37/vO/LniS5bghABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIAZH304OHR8eD7Fx8PvXtxanv7d+Z4LCwWi8Xi6W+PB0++dqFzLMsNAYggABEEIIIARBCACAIQQQAiCEAEAcjwrz+vutFfp57aXL92PWp8g27MTfvzjhrd5J3rezrKDQGIIAARBCCCAEQQgAgCEEEAIghABAHI8DsVV934Ox/HrPpGGcuZ+vuy6s8d5YYARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggABEEIIIARBCACAIQQQAiCEAEAYggAFmbe4DLtruzfTZy7u29zYsehRl99+TZ0LnDo+Mb9X/EDQGIIAARBCCCAEQQgAgCEEEAIghABAHI30F5flacOJqyAAAAAElFTkSuQmCC",
+  sling:   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAACwCAYAAABZ/mHGAAACZ0lEQVR4nO3csW3DUAxAQSvIRGrSZCIP5InSpNFKzhAMQAjvrv+QJfuBDeXjAYvev9/vyfnj6+eYnP+YHIa7EwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0o7tfWx21b9/E4A0AZAmANIEQJoASBMAaQIgTQCkCYA0AZAmANIEQJoASBMAaQIgbbzLXd8n3+b5z5gApAmANAGQJgDSBECaAEgTAGkCIE0ApAmANAGQJgDSBECaAEgTAGnru+D1ffb6/W8zAUgTAGkCIE0ApAmANAGQJgDSBECaAEgTAGkCIE0ApAmANAGQJgDSbr9Lvr1Pv3391+s1uv55npPjj+u6Ruefz+fqb9AEIE0ApAmANAGQJgDSBECaAEgTAGkCIE0ApAmANAGQJgDSBECaAEj73P4AU/b5Z/v8dSYAaQIgTQCkCYA0AZAmANIEQJoASBMAaQIgTQCkCYA0AZAmANIEQNrt3wfY3uefX3/2//jeJ5gxAUgTAGkCIE0ApAmANAGQJgDSBECaAEgTAGkCIE0ApAmANAGQJgDSRrvo/2F7n39b/f63mQCkCYA0AZAmANIEQJoASBMAaQIgTQCkCYA0AZAmANIEQJoASBMAaeNdcvvsuzz/GROANAGQJgDSBECaAEgTAGkCIE0ApAmANAGQJgDSBECaAEgTAGkCIO2wT95W//5NANIEQJoASBMAaQIgTQCkCYA0AZAmANIEQJoASBMAaQIgTQCkCYC0W+9yc3/b7yOYAKQJgDQBkCYA0gRAmgBIEwBpAiBNAKQJgDQBkCYA0gRAmgBIEwBpf82yW60EVoJmAAAAAElFTkSuQmCC",
+  horn:    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASYAAAB+CAYAAACJbrz0AAAChElEQVR4nO3cMa7aQBRAURz9RVBlEyloItGyFmqWQc1aaJF+84tsIhW7IH2EUowscm3O6S1GY3w1zZtpw6wel/Nj5LnpeJrmXsu/3A/7oXVur7eXrnMp+8m8vv3vBQD8TZiAHGECcoQJyBEmIEeYgBxhAnKECcgRJiBHmIAcYQJyhAnIESYgZ/UT2KbT35P3vmxOTECOMAE5wgTkCBOQI0xAjjABOcIE5AgTkCNMQI4wATnCBOQIE5AjTEDOyyep74f90NT39npb9dT34+vn0L6s3bT7XPV79z0858QE5AgTkCNMQI4wATnCBOQIE5AjTECOMAE5wgTkCBOQI0xAjjABOcIE5Kx6QvkdLOVWgq9fv4ee2/34PvTc2m8lWDsnJiBHmIAcYQJyhAnIESYgR5iAHGECcoQJyBEmIEeYgBxhAnKECcgRJiDn43E5D02nT8eT6e0ZuSWAsld3wokJyBEmIEeYgBxhAnKECcgRJiBHmIAcYQJyhAnIESYgR5iAHGECcoQJyHFDQITbBZ6bdp/+o2/IiQnIESYgR5iAHGECcoQJyBEmIEeYgBxhAnKECcgRJiBHmIAcYQJyhAnI+Xj1D94P+6Ep+u31Zso8YPSWAJ7zPTznxATkCBOQI0xAjjABOcIE5AgTkCNMQI4wATnCBOQIE5AjTECOMAE5wgTkrHpCebPZbB6X89D09nQ8rX5v1sx7XzYnJiBHmIAcYQJyhAnIESYgR5iAHGECcoQJyBEmIEeYgBxhAnKECcgRJiDHJPXMljLVfj/sh9a5vd5eus6l7CfzcmICcoQJyBEmIEeYgBxhAnKECcgRJiBHmIAcYQJyhAnIESYgR5iAHGECcv4A+aZZhTC+ivoAAAAASUVORK5CYII=",
+  redsea:  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAARAAAACQCAYAAADAzTR5AAACTUlEQVR4nO3csU3DUBhGUYxYIhUVomAGJmCOzMMAiDEyQ1gBUSAqxjA73B/JsnxO77xXRFev+pbn1+t6s2OPD/ej799eTqPvl2VZRj/AyLquo//v+fI7Ov/z62f0/d7dbn0BYL8EBMgEBMgEBMgEBMgEBMgEBMgEBMgEBMgEBMgEBMgEBMgEBMgEBMgEBMjutr7A1HSP4XyZnT/dozj6nog9j33zAgEyAQEyAQEyAQEyAQEyAQEyAQEyAQEyAQEyAQEyAQEyAQEyAQEyAQEyAQGy3e+BTNkTmbHncWxeIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEAmIEB2+D2Qqb3viUzZ8zg2LxAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgsweysfkexulf7lHZ8zg2LxAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgExAgsweyc98f7xvf4Gnj89mSFwiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQCQiQ/QFa/EIxidyVnwAAAABJRU5ErkJggg==",
+};
+const img = {};
+let loadCount = 0;
+const spriteKeys = Object.keys(SPR);
+const totalToLoad = spriteKeys.length + 1; // + 내 캐릭터
+function onLoaded() {
+  loadCount++;
+  if (loadCount >= totalToLoad) {
+    document.getElementById('loadingMsg').style.display = 'none';
+    startGame();
+  }
+}
+spriteKeys.forEach(k => {
+  const im = new Image();
+  im.onload = onLoaded; im.onerror = onLoaded;
+  im.src = SPR[k]; img[k] = im;
+});
+// 내 캐릭터 (char1~7.png, 같은 폴더)
+const myCharSprite = new Image();
+myCharSprite.onload = onLoaded; myCharSprite.onerror = onLoaded;
+myCharSprite.src = myCharImg;
+// 다른 플레이어 캐릭터 캐시
+const charCache = {};
+function getCharImg(file) {
+  if (!charCache[file]) { const im = new Image(); im.src = file; charCache[file] = im; }
+  return charCache[file];
+}
+
+// ══ 캔버스 ══
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+let VW = 800, VH = 400;           // 가상 해상도(고정) — 모든 기기에서 동일 좌표계
+const GROUND = 330;
+const GRAVITY = 0.62;
+
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = VW * dpr;
+  canvas.height = VH * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ══ 레벨 시스템 ══
+let stats = { level:1, exp:0, totalKills:0, bestWave:0 };
+function expToNext(lv) { return 50 + (lv - 1) * 35; }
+function statsForLevel(lv) {
+  return {
+    maxHp: 100 + (lv - 1) * 15,
+    atk:   12  + (lv - 1) * 2,
+    skillDmg: 18 + (lv - 1) * 3,
+  };
+}
+async function loadStats() {
+  try {
+    const snap = await get(ref(db, `battleStats/${safeName}`));
+    if (snap.exists()) stats = Object.assign(stats, snap.val());
+  } catch(e) { console.warn('스탯 로드 실패', e); }
+}
+let saveTimer = null;
+function saveStats() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    set(ref(db, `battleStats/${safeName}`), {
+      name: myName, level: stats.level, exp: stats.exp,
+      totalKills: stats.totalKills, bestWave: stats.bestWave, t: Date.now()
+    }).catch(e => console.warn('스탯 저장 실패', e));
+  }, 900);
+}
+function gainExp(amount) {
+  stats.exp += amount;
+  let leveled = false;
+  while (stats.exp >= expToNext(stats.level)) {
+    stats.exp -= expToNext(stats.level);
+    stats.level++;
+    leveled = true;
+  }
+  if (leveled) {
+    const s = statsForLevel(stats.level);
+    player.maxHp = s.maxHp;
+    player.hp = s.maxHp;           // 레벨업 시 체력 회복
+    showLevelUp();
+  }
+  saveStats();
+  updateHud();
+}
+function showLevelUp() {
+  const el = document.getElementById('lvup');
+  el.textContent = `LEVEL UP!  Lv.${stats.level}`;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 1600);
+}
+
+// ══ 플레이어 ══
+const player = {
+  x:100, y:GROUND-64, w:44, h:64, vx:0, vy:0,
+  onGround:false, facing:1,
+  hp:100, maxHp:100, gauge:0, maxGauge:100,
+  atkCd:0, skillCd:0, invuln:0,
+  speed:4.2, jump:-13.2,
+};
+
+// ══ 몬스터 (1단계: 로컬) ══
+let monsters = [], projectiles = [], effects = [], others = {};
+let wave = 1, totalWaves = 3, gameState = 'playing', transitioning = false, shake = 0;
+let waveStartTime = 0;
+
+const MSPEC = {
+  babel:   { w:44, h:60,  hp:30,  speed:1.3, dmg:6,  exp:10 },
+  soldier: { w:48, h:60,  hp:48,  speed:1.7, dmg:9,  exp:15 },
+  goliath: { w:88, h:100, hp:280, speed:1.0, dmg:18, exp:100 },
+};
+function mkMonster(type, x) {
+  const s = MSPEC[type];
+  return { type, x, y:GROUND-s.h, w:s.w, h:s.h, hp:s.hp, maxHp:s.hp,
+    speed:s.speed, dmg:s.dmg, exp:s.exp, facing:-1, hitCd:0, flash:0, alive:true };
+}
+function spawnWave(n) {
+  monsters = [];
+  document.getElementById('bossWrap').style.display = 'none';
+  if (n === 1)      { monsters.push(mkMonster('babel',520), mkMonster('babel',630), mkMonster('babel',740)); }
+  else if (n === 2) { monsters.push(mkMonster('soldier',540), mkMonster('soldier',660), mkMonster('soldier',760)); }
+  else              { monsters.push(mkMonster('goliath',640));
+                      document.getElementById('bossWrap').style.display = 'block'; }
+  document.getElementById('waveTag').textContent = `Wave ${n} / ${totalWaves}`;
+}
+
+// ══ 멀티 동기화 (1단계: 플레이어 위치만) ══
+let myRef = null, lastSync = 0;
+function initMulti() {
+  myRef = ref(db, `battle/${ROOM}/players/${myId}`);
+  syncMe(true);
+  onDisconnect(myRef).remove();
+
+  onValue(ref(db, `battle/${ROOM}/players`), snap => {
+    const data = snap.val() || {};
+    const now = Date.now();
+    const next = {};
+    let count = 0;
+    for (const id in data) {
+      const p = data[id];
+      if (id === myId) { count++; continue; }
+      if (!p.t || now - p.t > 20000) continue;   // 오래된 유저 제외
+      const old = others[id];
+      next[id] = {
+        name:p.name, char:p.char, level:p.level||1,
+        x:p.x, y:p.y, facing:p.facing||1, hp:p.hp, maxHp:p.maxHp,
+        // 보간용: 이전 위치 유지
+        rx: old ? old.rx : p.x,
+        ry: old ? old.ry : p.y,
+      };
+      count++;
+    }
+    others = next;
+    document.getElementById('onlineTag').textContent = `● ${count}명 접속`;
+  });
+}
+function syncMe(force) {
+  const now = Date.now();
+  if (!force && now - lastSync < 100) return;   // plaza와 동일한 100ms 주기
+  lastSync = now;
+  if (!myRef) return;
+  set(myRef, {
+    name: myName, char: myCharImg, level: stats.level,
+    x: Math.round(player.x), y: Math.round(player.y),
+    facing: player.facing, hp: Math.round(player.hp), maxHp: player.maxHp,
+    t: now
+  }).catch(()=>{});
+}
+window.addEventListener('beforeunload', () => { if (myRef) remove(myRef); });
+
+// ══ 입력 ══
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (['ArrowLeft','ArrowRight','ArrowUp','Space'].includes(e.code)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.code] = false; });
+
+function bindBtn(id, code) {
+  const el = document.getElementById(id);
+  const on  = e => { e.preventDefault(); keys[code] = true;  el.classList.add('pressed'); };
+  const off = e => { e.preventDefault(); keys[code] = false; el.classList.remove('pressed'); };
+  el.addEventListener('pointerdown', on);
+  el.addEventListener('pointerup', off);
+  el.addEventListener('pointerleave', off);
+  el.addEventListener('pointercancel', off);
+}
+bindBtn('btnLeft','ArrowLeft'); bindBtn('btnRight','ArrowRight');
+bindBtn('btnJump','ArrowUp');   bindBtn('btnAtk','KeyZ');
+bindBtn('btnSkill','KeyX');     bindBtn('btnUlt','KeyC');
+
+// ══ 액션 ══
+function doAttack() {
+  if (player.atkCd > 0) return;
+  player.atkCd = 20;
+  const s = statsForLevel(stats.level);
+  projectiles.push({ x:player.x+player.w/2+player.facing*12, y:player.y+player.h*0.42,
+    vx:player.facing*11, w:16, h:16, dmg:s.atk, life:70 });
+}
+function doSkill() {
+  if (player.skillCd > 0) return;
+  player.skillCd = 300;
+  const s = statsForLevel(stats.level);
+  effects.push({ type:'horn', x:player.x+player.w/2, y:player.y+player.h/2,
+    r:12, maxR:140, life:32, dmg:s.skillDmg, hit:new Set() });
+}
+function doUlt() {
+  if (player.gauge < player.maxGauge) return;
+  player.gauge = 0;
+  effects.push({ type:'redsea', life:48, dmg:99999, hit:new Set() });
+  shake = 20;
+}
+
+function overlap(a, b) {
+  return a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+}
+
+// ══ 업데이트 ══
+function update() {
+  if (gameState !== 'playing') return;
+
+  if (keys['ArrowLeft'])       { player.vx = -player.speed; player.facing = -1; }
+  else if (keys['ArrowRight']) { player.vx =  player.speed; player.facing =  1; }
+  else player.vx *= 0.72;
+
+  if ((keys['ArrowUp'] || keys['Space']) && player.onGround) {
+    player.vy = player.jump; player.onGround = false;
+  }
+  if (keys['KeyZ']) doAttack();
+  if (keys['KeyX']) doSkill();
+  if (keys['KeyC']) doUlt();
+
+  if (player.atkCd > 0)   player.atkCd--;
+  if (player.skillCd > 0) player.skillCd--;
+  if (player.invuln > 0)  player.invuln--;
+
+  player.vy += GRAVITY;
+  player.x += player.vx;
+  player.y += player.vy;
+  player.x = Math.max(0, Math.min(VW - player.w, player.x));
+  if (player.y + player.h >= GROUND) {
+    player.y = GROUND - player.h; player.vy = 0; player.onGround = true;
+  }
+
+  for (const m of monsters) {
+    if (!m.alive) continue;
+    const dx = player.x - m.x;
+    m.facing = dx > 0 ? 1 : -1;
+    if (Math.abs(dx) > m.w * 0.7) m.x += m.facing * m.speed;
+    if (m.hitCd > 0) m.hitCd--;
+    if (m.flash > 0) m.flash--;
+    if (overlap(player, m) && m.hitCd <= 0 && player.invuln <= 0) {
+      player.hp -= m.dmg; player.invuln = 45; m.hitCd = 55; shake = 9;
+    }
+  }
+
+  for (const p of projectiles) {
+    p.x += p.vx; p.life--;
+    for (const m of monsters) {
+      if (!m.alive) continue;
+      if (overlap({x:p.x-p.w/2,y:p.y-p.h/2,w:p.w,h:p.h}, m)) {
+        m.hp -= p.dmg; m.flash = 8; p.life = 0;
+        player.gauge = Math.min(player.maxGauge, player.gauge + 6);
+        checkKill(m);
+      }
+    }
+  }
+  projectiles = projectiles.filter(p => p.life > 0 && p.x > -30 && p.x < VW + 30);
+
+  for (const e of effects) {
+    e.life--;
+    if (e.type === 'horn') {
+      e.r += (e.maxR - e.r) * 0.3;
+      for (const m of monsters) {
+        if (!m.alive || e.hit.has(m)) continue;
+        const d = Math.hypot(m.x + m.w/2 - e.x, m.y + m.h/2 - e.y);
+        if (d < e.r) {
+          m.hp -= e.dmg; m.flash = 8; e.hit.add(m);
+          player.gauge = Math.min(player.maxGauge, player.gauge + 9);
+          checkKill(m);
+        }
+      }
+    } else if (e.type === 'redsea') {
+      for (const m of monsters) {
+        if (!m.alive || e.hit.has(m)) continue;
+        m.hp -= e.dmg; m.flash = 8; e.hit.add(m); checkKill(m);
+      }
+    }
+  }
+  effects = effects.filter(e => e.life > 0);
+  if (shake > 0) shake--;
+
+  syncMe(false);
+
+  if (player.hp <= 0) {
+    gameState = 'lost';
+    stats.bestWave = Math.max(stats.bestWave, wave - 1);
+    saveStats();
+    showOverlay('패배...', `Wave ${wave}에서 쓰러졌어요.\n레벨 ${stats.level} · 누적 처치 ${stats.totalKills}`, '다시 도전');
+    return;
+  }
+
+  if (monsters.length && monsters.every(m => !m.alive) && !transitioning) {
+    transitioning = true;
+    if (wave < totalWaves) {
+      const nx = wave + 1;
+      setTimeout(() => {
+        if (gameState === 'playing') { wave = nx; spawnWave(wave); }
+        transitioning = false;
+      }, 900);
+    } else {
+      gameState = 'won';
+      const clearTime = ((Date.now() - waveStartTime) / 1000).toFixed(1);
+      stats.bestWave = totalWaves;
+      saveStats();
+      saveClearRecord(clearTime);
+      showOverlay('승리! 🎉',
+        `골리앗을 물리쳤습니다!\n클리어 ${clearTime}초 · Lv.${stats.level}`, '다시 플레이');
+    }
+  }
+}
+
+function checkKill(m) {
+  if (m.hp <= 0 && m.alive) {
+    m.alive = false;
+    stats.totalKills++;
+    gainExp(m.exp);
+  }
+}
+
+async function saveClearRecord(sec) {
+  try {
+    const cur = await get(ref(db, `battleRecord/${safeName}`));
+    const prev = cur.exists() ? cur.val().time : Infinity;
+    if (parseFloat(sec) < prev) {
+      await set(ref(db, `battleRecord/${safeName}`),
+        { name:myName, time:parseFloat(sec), level:stats.level, t:Date.now() });
+    }
+  } catch(e) { console.warn(e); }
+}
+
+// ══ 렌더 ══
+function drawSprite(image, x, y, w, h, flip) {
+  if (!image || !image.complete || image.naturalWidth === 0) {
+    ctx.fillStyle = '#888'; ctx.fillRect(x, y, w, h); return;
+  }
+  if (flip) {
+    ctx.save(); ctx.translate(x + w, y); ctx.scale(-1, 1);
+    ctx.drawImage(image, 0, 0, w, h); ctx.restore();
+  } else {
+    ctx.drawImage(image, x, y, w, h);
+  }
+}
+
+function draw() {
+  ctx.save();
+  if (shake > 0) ctx.translate((Math.random()-.5)*shake, (Math.random()-.5)*shake);
+
+  // 배경
+  const g = ctx.createLinearGradient(0, 0, 0, VH);
+  g.addColorStop(0, '#7fb6d9'); g.addColorStop(.7, '#cfe0a8');
+  ctx.fillStyle = g; ctx.fillRect(-30, -30, VW+60, VH+60);
+  // 원경 언덕
+  ctx.fillStyle = 'rgba(140,170,110,.55)';
+  ctx.beginPath(); ctx.arc(180, GROUND+30, 120, Math.PI, 0); ctx.fill();
+  ctx.beginPath(); ctx.arc(560, GROUND+40, 150, Math.PI, 0); ctx.fill();
+  // 땅
+  ctx.fillStyle = '#b3894f'; ctx.fillRect(-30, GROUND, VW+60, VH);
+  ctx.fillStyle = '#8c6b3a'; ctx.fillRect(-30, GROUND, VW+60, 5);
+
+  // 다른 플레이어 (보간 이동)
+  for (const id in others) {
+    const o = others[id];
+    o.rx += (o.x - o.rx) * 0.25;
+    o.ry += (o.y - o.ry) * 0.25;
+    ctx.globalAlpha = 0.9;
+    drawSprite(getCharImg(o.char), o.rx, o.ry, 44, 64, o.facing < 0);
+    ctx.globalAlpha = 1;
+    ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,.6)';
+    ctx.fillRect(o.rx - 8, o.ry - 16, 60, 13);
+    ctx.fillStyle = '#FFC93C';
+    ctx.fillText(`Lv.${o.level} ${o.name}`, o.rx + 22, o.ry - 6);
+  }
+
+  // 몬스터
+  for (const m of monsters) {
+    if (!m.alive) continue;
+    ctx.save();
+    if (m.flash > 0) ctx.filter = 'brightness(2.2)';
+    drawSprite(img[m.type], m.x, m.y, m.w, m.h, m.facing < 0);
+    ctx.restore();
+    if (m.type !== 'goliath') {
+      ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(m.x, m.y - 9, m.w, 5);
+      ctx.fillStyle = '#E8483F'; ctx.fillRect(m.x, m.y - 9, m.w * Math.max(0,m.hp/m.maxHp), 5);
+    } else {
+      document.getElementById('bossFill').style.width = Math.max(0, m.hp/m.maxHp*100) + '%';
+    }
+  }
+
+  // 내 캐릭터
+  ctx.save();
+  if (player.invuln > 0 && Math.floor(player.invuln/4) % 2 === 0) ctx.globalAlpha = .4;
+  drawSprite(myCharSprite, player.x, player.y, player.w, player.h, player.facing < 0);
+  ctx.restore();
+  ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  ctx.strokeText(`Lv.${stats.level} ${myName}`, player.x + player.w/2, player.y - 6);
+  ctx.fillText(`Lv.${stats.level} ${myName}`, player.x + player.w/2, player.y - 6);
+
+  // 투사체
+  for (const p of projectiles) drawSprite(img.sling, p.x - p.w/2, p.y - p.h/2, p.w, p.h, false);
+
+  // 이펙트
+  for (const e of effects) {
+    if (e.type === 'horn') {
+      ctx.globalAlpha = Math.max(0, e.life/32) * .75;
+      drawSprite(img.horn, e.x - e.r, e.y - e.r*0.55, e.r*2, e.r*1.1, false);
+    } else {
+      ctx.globalAlpha = Math.max(0, e.life/48) * .9;
+      drawSprite(img.redsea, 0, GROUND - 150, VW, 170, false);
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+
+  // 쿨타임 UI
+  document.getElementById('btnSkill').classList.toggle('cool', player.skillCd > 0);
+  document.getElementById('btnUlt').classList.toggle('cool', player.gauge < player.maxGauge);
+}
+
+function updateHud() {
+  document.getElementById('lvBadge').textContent = `Lv.${stats.level}`;
+  document.getElementById('hpFill').style.width = Math.max(0, player.hp/player.maxHp*100) + '%';
+  document.getElementById('expFill').style.width = (stats.exp/expToNext(stats.level)*100) + '%';
+  document.getElementById('gaugeFill').style.width = (player.gauge/player.maxGauge*100) + '%';
+}
+
+function showOverlay(title, desc, btn) {
+  document.getElementById('ovTitle').textContent = title;
+  document.getElementById('ovDesc').style.whiteSpace = 'pre-line';
+  document.getElementById('ovDesc').textContent = desc;
+  document.getElementById('ovBtn').textContent = btn;
+  document.getElementById('ov').style.display = 'flex';
+}
+document.getElementById('ovBtn').addEventListener('click', () => {
+  const s = statsForLevel(stats.level);
+  player.maxHp = s.maxHp; player.hp = s.maxHp;
+  player.x = 100; player.y = GROUND - player.h; player.vx = 0; player.vy = 0;
+  player.gauge = 0; player.atkCd = 0; player.skillCd = 0; player.invuln = 0;
+  wave = 1; transitioning = false;
+  projectiles = []; effects = [];
+  gameState = 'playing';
+  waveStartTime = Date.now();
+  document.getElementById('ov').style.display = 'none';
+  spawnWave(wave);
+  updateHud();
+});
+
+// ══ 랭킹 ══
+window.openRank = async function() {
+  document.getElementById('rankModal').style.display = 'flex';
+  const el = document.getElementById('rankList');
+  el.innerHTML = '불러오는 중...';
+  try {
+    const snap = await get(ref(db, 'battleStats'));
+    const data = snap.val() || {};
+    const arr = Object.values(data)
+      .sort((a,b) => (b.level - a.level) || (b.exp - a.exp))
+      .slice(0, 20);
+    if (!arr.length) { el.innerHTML = '<div style="text-align:center;color:#888;padding:12px">아직 기록이 없어요!</div>'; return; }
+    const medal = ['🥇','🥈','🥉'];
+    el.innerHTML = arr.map((r,i) => `
+      <div class="rrow ${r.name===myName?'me':''}">
+        <div class="rnum">${medal[i]||(i+1)}</div>
+        <div class="rname">${r.name}</div>
+        <div class="rval">Lv.${r.level} · ${r.totalKills||0}킬</div>
+      </div>`).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="text-align:center;color:#E8483F;padding:12px">불러오기 실패</div>';
+  }
+};
+window.closeRank = function() { document.getElementById('rankModal').style.display = 'none'; };
+window.goPlaza = function() { if (myRef) remove(myRef); location.href = 'plaza.html'; };
+
+// ══ 시작 ══
+async function startGame() {
+  await loadStats();
+  const s = statsForLevel(stats.level);
+  player.maxHp = s.maxHp; player.hp = s.maxHp;
+  updateHud();
+  initMulti();
+  waveStartTime = Date.now();
+  spawnWave(wave);
+  loop();
+}
+function loop() { update(); draw(); updateHud(); requestAnimationFrame(loop); }
+</script>
+</body>
+</html>
