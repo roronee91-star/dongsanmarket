@@ -116,6 +116,13 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 .popup-btn-no { background:rgba(255,255,255,0.1); color:#aaa; border:1px solid #444; }
 
 /* 게임/퀴즈 버튼 - 하단 가운데 */
+.battle-float-btn {
+  position: fixed; left: 8px; top: 94px;
+  z-index: 50; background: linear-gradient(180deg, #e8483f, #b02a22);
+  border: none; border-radius: 14px; padding: 7px 14px; color: white;
+  font-size: 12px; font-weight: 900; font-family: inherit;
+  cursor: pointer; box-shadow: 0 3px 0 #7a1b15; display: none; white-space: nowrap;
+}
 .game-float-btn {
   position: fixed; left: 8px; top: 56px;
   z-index: 50; background: linear-gradient(180deg, #4a90d9, #2060b0);
@@ -297,6 +304,7 @@ body { font-family: 'Noto Sans KR', sans-serif; position: fixed; width: 100%; he
 
 <!-- 게임 버튼 -->
 <button class="game-float-btn" id="gameFloatBtn" onclick="showGamePopup()">📖 말씀 타자 게임</button>
+<button class="battle-float-btn" id="battleFloatBtn" onclick="goBattle()">⚔️ 성경 배틀</button>
 
 <!-- 채팅 메시지 + 입력창 - 우측 상단 -->
 <div class="chat-panel" id="chatPanel">
@@ -457,6 +465,8 @@ function setQuizMode(on) {
   document.getElementById('chatPanel').style.display = on ? 'none' : '';
   const cib = document.getElementById('chatInputBar'); if(cib) cib.style.display = on ? 'none' : '';
   document.getElementById('gameFloatBtn').style.display = on ? 'none' : (myName ? 'block' : 'none');
+  const bfb = document.getElementById('battleFloatBtn');
+  if (bfb) bfb.style.display = on ? 'none' : (myName ? 'block' : 'none');
 }
 
 const isPastor = localStorage.getItem('isPastor') === 'true';
@@ -523,6 +533,12 @@ const SPEED = 3;
 let W = window.innerWidth, H = window.innerHeight;
 let myRef = null;
 window.addEventListener('resize', ()=>{W=window.innerWidth;H=window.innerHeight;});
+
+window.goBattle = function() {
+  if (!myName) return;
+  if (myRef) remove(myRef);
+  window.location.href = 'battle.html';
+};
 
 window.goBackToMarket = function() {
   if (myRef) remove(myRef);
@@ -692,6 +708,7 @@ window.enterPlaza = async function() {
   renderPlayer(myId,myName,myImg,myX,myY,true);
 
   document.getElementById('gameFloatBtn').style.display = 'block';
+  document.getElementById('battleFloatBtn').style.display = 'block';
   if (isPastor) document.getElementById('quizFloatBtn').style.display = 'block';
 
   // 입장 시 잔여 quiz 데이터 초기화 (목사님만)
